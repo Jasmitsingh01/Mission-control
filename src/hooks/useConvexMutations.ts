@@ -1,81 +1,61 @@
-import { useMutation } from 'convex/react'
-import { api } from '../../convex/_generated/api'
 import { useAuthStore } from '@/stores/authStore'
+import { useCallback } from 'react'
+
+/**
+ * Convex mutation hooks - provide no-op stubs when Convex is not configured.
+ * When Convex is set up (`npx convex dev`), replace these with actual
+ * useMutation calls from convex/react.
+ *
+ * For now, all mutations go through Zustand stores (local state).
+ * The stores will be synced to Convex when it's configured.
+ */
+
+const noop = (..._args: any[]) => Promise.resolve()
 
 export function useTaskMutations() {
-  const userId = useAuthStore((s) => s.user?.id || '')
-  const add = useMutation(api.tasks.mutations.add)
-  const update = useMutation(api.tasks.mutations.update)
-  const remove = useMutation(api.tasks.mutations.remove)
-  const move = useMutation(api.tasks.mutations.move)
-
   return {
-    addTask: (data: any) => add({ ...data, userId }),
-    updateTask: (id: any, updates: any) => update({ id, userId, ...updates }),
-    deleteTask: (id: any) => remove({ id, userId }),
-    moveTask: (id: any, status: any, position: number) => move({ id, userId, newStatus: status, newPosition: position }),
+    addTask: noop,
+    updateTask: noop,
+    deleteTask: noop,
+    moveTask: noop,
   }
 }
 
 export function useAgentMutations() {
-  const userId = useAuthStore((s) => s.user?.id || '')
-  const add = useMutation(api.agents.mutations.add)
-  const update = useMutation(api.agents.mutations.update)
-  const remove = useMutation(api.agents.mutations.remove)
-
   return {
-    addAgent: (data: any) => add({ ...data, userId }),
-    updateAgent: (id: any, updates: any) => update({ id, userId, ...updates }),
-    deleteAgent: (id: any) => remove({ id, userId }),
+    addAgent: noop,
+    updateAgent: noop,
+    deleteAgent: noop,
   }
 }
 
 export function useActivityMutations() {
-  const userId = useAuthStore((s) => s.user?.id || '')
-  const add = useMutation(api.activity.mutations.add)
-  const clear = useMutation(api.activity.mutations.clear)
-
   return {
-    addEvent: (data: any) => add({ ...data, userId }),
-    clearEvents: () => clear({ userId }),
+    addEvent: noop,
+    clearEvents: noop,
   }
 }
 
 export function useJobMutations() {
-  const userId = useAuthStore((s) => s.user?.id || '')
-  const add = useMutation(api.jobs.mutations.add)
-  const update = useMutation(api.jobs.mutations.update)
-  const remove = useMutation(api.jobs.mutations.remove)
-  const toggle = useMutation(api.jobs.mutations.toggle)
-
   return {
-    addJob: (data: any) => add({ ...data, userId }),
-    updateJob: (id: any, updates: any) => update({ id, userId, ...updates }),
-    deleteJob: (id: any) => remove({ id, userId }),
-    toggleJob: (id: any) => toggle({ id, userId }),
+    addJob: noop,
+    updateJob: noop,
+    deleteJob: noop,
+    toggleJob: noop,
   }
 }
 
 export function useMemoryMutations() {
-  const userId = useAuthStore((s) => s.user?.id || '')
-  const add = useMutation(api.memory.mutations.add)
-  const update = useMutation(api.memory.mutations.update)
-  const remove = useMutation(api.memory.mutations.remove)
-
   return {
-    addEntry: (data: any) => add({ ...data, userId }),
-    updateEntry: (id: any, updates: any) => update({ id, userId, ...updates }),
-    deleteEntry: (id: any) => remove({ id, userId }),
+    addEntry: noop,
+    updateEntry: noop,
+    deleteEntry: noop,
   }
 }
 
 export function useSkillMutations() {
-  const userId = useAuthStore((s) => s.user?.id || '')
-  const install = useMutation(api.skills.mutations.install)
-  const uninstall = useMutation(api.skills.mutations.uninstall)
-
   return {
-    installSkill: (id: any) => install({ id, userId }),
-    uninstallSkill: (id: any) => uninstall({ id, userId }),
+    installSkill: noop,
+    uninstallSkill: noop,
   }
 }
