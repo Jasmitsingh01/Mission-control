@@ -1,6 +1,16 @@
 import { query } from "../_generated/server"
 import { v } from "convex/values"
 
+const taskStatusValidator = v.union(
+  v.literal("planning"),
+  v.literal("inbox"),
+  v.literal("assigned"),
+  v.literal("in_progress"),
+  v.literal("testing"),
+  v.literal("review"),
+  v.literal("done")
+)
+
 // List tasks for an organization (all members can see)
 export const list = query({
   args: { userId: v.string(), orgId: v.optional(v.string()) },
@@ -20,20 +30,20 @@ export const list = query({
 
 // List tasks by status within an org
 export const getByStatus = query({
-  args: { userId: v.string(), orgId: v.optional(v.string()), status: v.string() },
+  args: { userId: v.string(), orgId: v.optional(v.string()), status: taskStatusValidator },
   handler: async (ctx, args) => {
     if (args.orgId) {
       return await ctx.db
         .query("tasks")
         .withIndex("by_orgId_status", (q) =>
-          q.eq("orgId", args.orgId!).eq("status", args.status as any)
+          q.eq("orgId", args.orgId!).eq("status", args.status)
         )
         .collect()
     }
     return await ctx.db
       .query("tasks")
       .withIndex("by_userId_status", (q) =>
-        q.eq("userId", args.userId).eq("status", args.status as any)
+        q.eq("userId", args.userId).eq("status", args.status)
       )
       .collect()
   },

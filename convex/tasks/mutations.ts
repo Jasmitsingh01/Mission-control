@@ -1,6 +1,23 @@
 import { mutation } from "../_generated/server"
 import { v } from "convex/values"
-import { verifyOrgAccess, verifyOwnership } from "../lib/helpers"
+import { verifyOrgAccess } from "../lib/helpers"
+
+const taskStatusValidator = v.union(
+  v.literal("planning"),
+  v.literal("inbox"),
+  v.literal("assigned"),
+  v.literal("in_progress"),
+  v.literal("testing"),
+  v.literal("review"),
+  v.literal("done")
+)
+
+const priorityValidator = v.union(
+  v.literal("critical"),
+  v.literal("high"),
+  v.literal("medium"),
+  v.literal("low")
+)
 
 export const add = mutation({
   args: {
@@ -8,21 +25,8 @@ export const add = mutation({
     orgId: v.string(),
     title: v.string(),
     description: v.string(),
-    status: v.union(
-      v.literal("planning"),
-      v.literal("inbox"),
-      v.literal("assigned"),
-      v.literal("in_progress"),
-      v.literal("testing"),
-      v.literal("review"),
-      v.literal("done")
-    ),
-    priority: v.union(
-      v.literal("critical"),
-      v.literal("high"),
-      v.literal("medium"),
-      v.literal("low")
-    ),
+    status: taskStatusValidator,
+    priority: priorityValidator,
     position: v.number(),
     assignedAgentId: v.optional(v.id("agents")),
     assignedUserId: v.optional(v.string()),
@@ -46,25 +50,8 @@ export const update = mutation({
     id: v.id("tasks"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
-    status: v.optional(
-      v.union(
-        v.literal("planning"),
-        v.literal("inbox"),
-        v.literal("assigned"),
-        v.literal("in_progress"),
-        v.literal("testing"),
-        v.literal("review"),
-        v.literal("done")
-      )
-    ),
-    priority: v.optional(
-      v.union(
-        v.literal("critical"),
-        v.literal("high"),
-        v.literal("medium"),
-        v.literal("low")
-      )
-    ),
+    status: v.optional(taskStatusValidator),
+    priority: v.optional(priorityValidator),
     position: v.optional(v.number()),
     assignedAgentId: v.optional(v.id("agents")),
     assignedUserId: v.optional(v.string()),
@@ -73,7 +60,6 @@ export const update = mutation({
     parentTaskId: v.optional(v.id("tasks")),
   },
   handler: async (ctx, args) => {
-    // Org members can update any task in their org
     await verifyOrgAccess(ctx.db, args.id, args.orgId)
     const { userId, orgId, id, ...fields } = args
     const updates: Record<string, any> = { updatedAt: Date.now() }
@@ -103,15 +89,7 @@ export const move = mutation({
     userId: v.string(),
     orgId: v.string(),
     id: v.id("tasks"),
-    status: v.union(
-      v.literal("planning"),
-      v.literal("inbox"),
-      v.literal("assigned"),
-      v.literal("in_progress"),
-      v.literal("testing"),
-      v.literal("review"),
-      v.literal("done")
-    ),
+    status: taskStatusValidator,
     position: v.number(),
   },
   handler: async (ctx, args) => {

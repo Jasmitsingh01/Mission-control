@@ -2,19 +2,21 @@ import { mutation } from "../_generated/server"
 import { v } from "convex/values"
 import { verifyOrgAccess } from "../lib/helpers"
 
+const memoryTypeValidator = v.union(
+  v.literal("conversation"),
+  v.literal("fact"),
+  v.literal("preference"),
+  v.literal("context"),
+  v.literal("tool_result")
+)
+
 export const add = mutation({
   args: {
     userId: v.string(),
     orgId: v.string(),
     agentId: v.id("agents"),
     sessionId: v.string(),
-    type: v.union(
-      v.literal("conversation"),
-      v.literal("fact"),
-      v.literal("preference"),
-      v.literal("context"),
-      v.literal("tool_result")
-    ),
+    type: memoryTypeValidator,
     content: v.string(),
     metadata: v.optional(v.any()),
     expiresAt: v.optional(v.number()),

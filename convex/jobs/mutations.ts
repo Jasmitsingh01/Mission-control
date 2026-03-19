@@ -2,6 +2,20 @@ import { mutation } from "../_generated/server"
 import { v } from "convex/values"
 import { verifyOrgAccess } from "../lib/helpers"
 
+const priorityValidator = v.union(
+  v.literal("critical"),
+  v.literal("high"),
+  v.literal("medium"),
+  v.literal("low")
+)
+
+const jobStatusValidator = v.union(
+  v.literal("scheduled"),
+  v.literal("running"),
+  v.literal("paused"),
+  v.literal("failed")
+)
+
 export const add = mutation({
   args: {
     userId: v.string(),
@@ -11,20 +25,10 @@ export const add = mutation({
     cronExpression: v.string(),
     taskTemplate: v.any(),
     targetAgentId: v.optional(v.id("agents")),
-    priority: v.union(
-      v.literal("critical"),
-      v.literal("high"),
-      v.literal("medium"),
-      v.literal("low")
-    ),
+    priority: priorityValidator,
     enabled: v.boolean(),
     nextRunAt: v.number(),
-    status: v.union(
-      v.literal("scheduled"),
-      v.literal("running"),
-      v.literal("paused"),
-      v.literal("failed")
-    ),
+    status: jobStatusValidator,
   },
   handler: async (ctx, args) => {
     const now = Date.now()
@@ -45,24 +49,10 @@ export const update = mutation({
     cronExpression: v.optional(v.string()),
     taskTemplate: v.optional(v.any()),
     targetAgentId: v.optional(v.id("agents")),
-    priority: v.optional(
-      v.union(
-        v.literal("critical"),
-        v.literal("high"),
-        v.literal("medium"),
-        v.literal("low")
-      )
-    ),
+    priority: v.optional(priorityValidator),
     enabled: v.optional(v.boolean()),
     nextRunAt: v.optional(v.number()),
-    status: v.optional(
-      v.union(
-        v.literal("scheduled"),
-        v.literal("running"),
-        v.literal("paused"),
-        v.literal("failed")
-      )
-    ),
+    status: v.optional(jobStatusValidator),
     lastRunAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
   },
@@ -99,11 +89,13 @@ export const toggle = mutation({
   },
   handler: async (ctx, args) => {
     const doc = await verifyOrgAccess(ctx.db, args.id, args.orgId)
-    const enabled = !(doc as any).enabled
+    const wasEnabled = (doc as any).enabled as boolean
+    const enabled = !wasEnabled
+    const status: "scheduled" | "paused" = enabled ? "scheduled" : "paused"
     await ctx.db.patch(args.id, {
       enabled,
-      status: enabled ? "scheduled" : "paused",
+      status,
       updatedAt: Date.now(),
-    } as any)
+    })
   },
 })

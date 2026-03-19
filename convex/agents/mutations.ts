@@ -2,32 +2,38 @@ import { mutation } from "../_generated/server"
 import { v } from "convex/values"
 import { verifyOrgAccess } from "../lib/helpers"
 
+const agentStatusValidator = v.union(
+  v.literal("idle"),
+  v.literal("running"),
+  v.literal("paused"),
+  v.literal("stopped"),
+  v.literal("error")
+)
+
+const providerValidator = v.union(
+  v.literal("openai"),
+  v.literal("anthropic"),
+  v.literal("google"),
+  v.literal("local"),
+  v.literal("custom")
+)
+
+const configValidator = v.object({
+  temperature: v.optional(v.number()),
+  maxTokens: v.optional(v.number()),
+  systemPrompt: v.optional(v.string()),
+})
+
 export const add = mutation({
   args: {
     userId: v.string(),
     orgId: v.string(),
     name: v.string(),
     description: v.string(),
-    status: v.union(
-      v.literal("idle"),
-      v.literal("running"),
-      v.literal("paused"),
-      v.literal("stopped"),
-      v.literal("error")
-    ),
-    provider: v.union(
-      v.literal("openai"),
-      v.literal("anthropic"),
-      v.literal("google"),
-      v.literal("local"),
-      v.literal("custom")
-    ),
+    status: agentStatusValidator,
+    provider: providerValidator,
     model: v.string(),
-    config: v.object({
-      temperature: v.optional(v.number()),
-      maxTokens: v.optional(v.number()),
-      systemPrompt: v.optional(v.string()),
-    }),
+    config: configValidator,
     enabledSkills: v.array(v.string()),
   },
   handler: async (ctx, args) => {
@@ -47,23 +53,9 @@ export const update = mutation({
     id: v.id("agents"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    provider: v.optional(
-      v.union(
-        v.literal("openai"),
-        v.literal("anthropic"),
-        v.literal("google"),
-        v.literal("local"),
-        v.literal("custom")
-      )
-    ),
+    provider: v.optional(providerValidator),
     model: v.optional(v.string()),
-    config: v.optional(
-      v.object({
-        temperature: v.optional(v.number()),
-        maxTokens: v.optional(v.number()),
-        systemPrompt: v.optional(v.string()),
-      })
-    ),
+    config: v.optional(configValidator),
     enabledSkills: v.optional(v.array(v.string())),
     errorMessage: v.optional(v.string()),
   },
@@ -97,13 +89,7 @@ export const setStatus = mutation({
     userId: v.string(),
     orgId: v.string(),
     id: v.id("agents"),
-    status: v.union(
-      v.literal("idle"),
-      v.literal("running"),
-      v.literal("paused"),
-      v.literal("stopped"),
-      v.literal("error")
-    ),
+    status: agentStatusValidator,
     errorMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
