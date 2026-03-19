@@ -9,6 +9,8 @@ import { JobsPage } from '@/features/jobs/JobsPage'
 import { MemoryPage } from '@/features/memory/MemoryPage'
 import { SkillsPage } from '@/features/skills/SkillsPage'
 import { OrgPage } from '@/features/orgs/OrgPage'
+import { SettingsPage } from '@/features/settings/SettingsPage'
+import { MissionLauncherPage } from '@/features/mission/MissionLauncherPage'
 
 export default function App() {
   return (
@@ -17,6 +19,7 @@ export default function App() {
         <Routes>
           <Route element={<DashboardShell />}>
             <Route index element={<DashboardPage />} />
+            <Route path="mission" element={<MissionLauncherPage />} />
             <Route path="board" element={<KanbanPage />} />
             <Route path="activity" element={<ActivityPage />} />
             <Route path="agents" element={<AgentsPage />} />
@@ -24,6 +27,7 @@ export default function App() {
             <Route path="memory" element={<MemoryPage />} />
             <Route path="skills" element={<SkillsPage />} />
             <Route path="org" element={<OrgPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </TooltipProvider>

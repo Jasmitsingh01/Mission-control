@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  Rocket,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -23,6 +24,7 @@ import {
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/mission', icon: Rocket, label: 'Launch Mission' },
   { to: '/board', icon: KanbanSquare, label: 'Task Board' },
   { to: '/activity', icon: Activity, label: 'Activity Feed' },
   { to: '/agents', icon: Bot, label: 'Agents' },

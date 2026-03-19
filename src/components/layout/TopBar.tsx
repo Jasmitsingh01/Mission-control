@@ -11,9 +11,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/hooks/useTheme'
+import { useActivityStore } from '@/stores/activityStore'
 
 export function TopBar() {
   const { theme, toggleTheme } = useTheme()
+  const events = useActivityStore((s) => s.events)
+  const errorCount = events.filter((e) => e.severity === 'error').length
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-background px-6">
@@ -40,9 +43,11 @@ export function TopBar() {
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative h-9 w-9">
           <Bell className="h-4 w-4" />
-          <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary">
-            3
-          </Badge>
+          {events.length > 0 && (
+            <Badge className={`absolute -top-0.5 -right-0.5 h-4 min-w-4 p-0 flex items-center justify-center text-[10px] ${errorCount > 0 ? 'bg-red-500' : 'bg-primary'}`}>
+              {events.length > 99 ? '99+' : events.length}
+            </Badge>
+          )}
         </Button>
 
         {/* User menu */}
