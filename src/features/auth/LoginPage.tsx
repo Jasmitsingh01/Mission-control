@@ -17,7 +17,16 @@ export function LoginPage() {
     setError('')
     if (!email || !password) { setError('Please fill in all fields'); return }
     const success = await login(email, password)
-    if (success) navigate('/dashboard')
+    if (success) {
+      // Check for pending invite
+      const pendingInvite = localStorage.getItem('mc_pending_invite')
+      if (pendingInvite) {
+        localStorage.removeItem('mc_pending_invite')
+        navigate(`/invite/${pendingInvite}`)
+      } else {
+        navigate('/dashboard')
+      }
+    }
   }
 
   return (

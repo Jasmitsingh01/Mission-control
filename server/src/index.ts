@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/auth';
 import proxyRoutes from './routes/proxy';
 import missionRoutes from './routes/missions';
+import orgRoutes from './routes/orgs';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -16,8 +17,11 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/agentf
 // CORS
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    origin: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',')
+      : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
     credentials: true,
+    exposedHeaders: ['X-Org-Id'],
   })
 );
 
@@ -29,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', authRoutes);
 app.use('/api/proxy', proxyRoutes);
 app.use('/api/missions', missionRoutes);
+app.use('/api/orgs', orgRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

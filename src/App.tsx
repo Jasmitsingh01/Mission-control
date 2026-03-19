@@ -27,6 +27,7 @@ import { JobsPage } from '@/features/jobs/JobsPage'
 import { MemoryPage } from '@/features/memory/MemoryPage'
 import { SkillsPage } from '@/features/skills/SkillsPage'
 import { OrgPage } from '@/features/orgs/OrgPage'
+import { AcceptInvitePage } from '@/features/orgs/AcceptInvitePage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 
 export default function App() {
@@ -48,6 +49,9 @@ export default function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
           </Route>
+
+          {/* Invitation accept */}
+          <Route path="invite/:token" element={<AcceptInvitePage />} />
 
           {/* Protected dashboard */}
           <Route

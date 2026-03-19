@@ -4,6 +4,7 @@ import { v } from "convex/values"
 export const add = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     type: v.union(
       v.literal("task_created"),
       v.literal("task_moved"),
@@ -16,7 +17,10 @@ export const add = mutation({
       v.literal("job_failed"),
       v.literal("skill_triggered"),
       v.literal("memory_written"),
-      v.literal("system")
+      v.literal("system"),
+      v.literal("member_joined"),
+      v.literal("member_removed"),
+      v.literal("org_updated")
     ),
     severity: v.union(
       v.literal("info"),
@@ -41,11 +45,11 @@ export const add = mutation({
 })
 
 export const clear = mutation({
-  args: { userId: v.string() },
+  args: { userId: v.string(), orgId: v.string() },
   handler: async (ctx, args) => {
     const events = await ctx.db
       .query("activity_events")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect()
     for (const event of events) {
       await ctx.db.delete(event._id)

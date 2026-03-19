@@ -1,10 +1,11 @@
 import { mutation } from "../_generated/server"
 import { v } from "convex/values"
-import { verifyOwnership } from "../lib/helpers"
+import { verifyOrgAccess, verifyOwnership } from "../lib/helpers"
 
 export const add = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     title: v.string(),
     description: v.string(),
     status: v.union(
@@ -24,6 +25,7 @@ export const add = mutation({
     ),
     position: v.number(),
     assignedAgentId: v.optional(v.id("agents")),
+    assignedUserId: v.optional(v.string()),
     labels: v.array(v.string()),
     dueDate: v.optional(v.number()),
     parentTaskId: v.optional(v.id("tasks")),
@@ -40,6 +42,7 @@ export const add = mutation({
 export const update = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     id: v.id("tasks"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -64,13 +67,15 @@ export const update = mutation({
     ),
     position: v.optional(v.number()),
     assignedAgentId: v.optional(v.id("agents")),
+    assignedUserId: v.optional(v.string()),
     labels: v.optional(v.array(v.string())),
     dueDate: v.optional(v.number()),
     parentTaskId: v.optional(v.id("tasks")),
   },
   handler: async (ctx, args) => {
-    await verifyOwnership(ctx.db, args.id, args.userId)
-    const { userId, id, ...fields } = args
+    // Org members can update any task in their org
+    await verifyOrgAccess(ctx.db, args.id, args.orgId)
+    const { userId, orgId, id, ...fields } = args
     const updates: Record<string, any> = { updatedAt: Date.now() }
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) {
@@ -84,10 +89,11 @@ export const update = mutation({
 export const remove = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     id: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    await verifyOwnership(ctx.db, args.id, args.userId)
+    await verifyOrgAccess(ctx.db, args.id, args.orgId)
     await ctx.db.delete(args.id)
   },
 })
@@ -95,6 +101,7 @@ export const remove = mutation({
 export const move = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     id: v.id("tasks"),
     status: v.union(
       v.literal("planning"),
@@ -108,7 +115,7 @@ export const move = mutation({
     position: v.number(),
   },
   handler: async (ctx, args) => {
-    await verifyOwnership(ctx.db, args.id, args.userId)
+    await verifyOrgAccess(ctx.db, args.id, args.orgId)
     await ctx.db.patch(args.id, {
       status: args.status,
       position: args.position,
@@ -120,11 +127,12 @@ export const move = mutation({
 export const reorder = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     id: v.id("tasks"),
     position: v.number(),
   },
   handler: async (ctx, args) => {
-    await verifyOwnership(ctx.db, args.id, args.userId)
+    await verifyOrgAccess(ctx.db, args.id, args.orgId)
     await ctx.db.patch(args.id, {
       position: args.position,
       updatedAt: Date.now(),

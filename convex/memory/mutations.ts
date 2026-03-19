@@ -1,10 +1,11 @@
 import { mutation } from "../_generated/server"
 import { v } from "convex/values"
-import { verifyOwnership } from "../lib/helpers"
+import { verifyOrgAccess } from "../lib/helpers"
 
 export const add = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     agentId: v.id("agents"),
     sessionId: v.string(),
     type: v.union(
@@ -30,14 +31,15 @@ export const add = mutation({
 export const update = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     id: v.id("memory_entries"),
     content: v.optional(v.string()),
     metadata: v.optional(v.any()),
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await verifyOwnership(ctx.db, args.id, args.userId)
-    const { userId, id, ...fields } = args
+    await verifyOrgAccess(ctx.db, args.id, args.orgId)
+    const { userId, orgId, id, ...fields } = args
     const updates: Record<string, any> = { updatedAt: Date.now() }
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) {
@@ -51,10 +53,11 @@ export const update = mutation({
 export const remove = mutation({
   args: {
     userId: v.string(),
+    orgId: v.string(),
     id: v.id("memory_entries"),
   },
   handler: async (ctx, args) => {
-    await verifyOwnership(ctx.db, args.id, args.userId)
+    await verifyOrgAccess(ctx.db, args.id, args.orgId)
     await ctx.db.delete(args.id)
   },
 })

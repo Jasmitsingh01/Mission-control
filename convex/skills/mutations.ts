@@ -4,6 +4,7 @@ import { v } from "convex/values"
 export const install = mutation({
   args: {
     userId: v.string(),
+    orgId: v.optional(v.string()),
     skillId: v.id("skills"),
     config: v.optional(v.any()),
   },
@@ -20,6 +21,7 @@ export const install = mutation({
     }
     return await ctx.db.insert("installed_skills", {
       userId: args.userId,
+      orgId: args.orgId,
       skillId: args.skillId,
       config: args.config,
     })

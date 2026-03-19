@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import Organization from '../models/Organization';
+import OrgMember from '../models/OrgMember';
 import { authenticate } from '../middleware/auth';
+import { PLAN_LIMITS } from '../models/Organization';
 
 const router = Router();
 
@@ -12,6 +15,22 @@ function generateToken(user: { _id: any; email: string }): string {
   return jwt.sign({ id: user._id.toString(), email: user.email }, JWT_SECRET, {
     expiresIn: TOKEN_EXPIRY,
   });
+}
+
+/** Fetch orgs the user belongs to (lightweight, for auth responses) */
+async function getUserOrgs(userId: string) {
+  const memberships = await OrgMember.find({ userId }).lean();
+  if (memberships.length === 0) return [];
+  const orgIds = memberships.map((m) => m.orgId);
+  const orgs = await Organization.find({ _id: { $in: orgIds } }, 'name slug plan').lean();
+  const roleMap = new Map(memberships.map((m) => [m.orgId.toString(), m.role]));
+  return orgs.map((o) => ({
+    id: o._id,
+    name: o.name,
+    slug: o.slug,
+    plan: o.plan,
+    role: roleMap.get(o._id.toString()),
+  }));
 }
 
 // POST /register
@@ -38,11 +57,38 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     const user = new User({ name, email, password });
     await user.save();
 
+    // Auto-create a personal organization for the new user
+    const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 50);
+    const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
+    const org = new Organization({
+      name: `${name}'s Workspace`,
+      slug: uniqueSlug,
+      ownerId: user._id,
+      plan: 'free',
+      settings: { ...PLAN_LIMITS.free },
+    });
+    await org.save();
+
+    const member = new OrgMember({
+      orgId: org._id,
+      userId: user._id,
+      role: 'owner',
+      invitedBy: user._id,
+    });
+    await member.save();
+
+    // Set as current org
+    user.currentOrgId = org._id.toString();
+    await user.save();
+
     const token = generateToken(user);
+    const orgs = await getUserOrgs(user._id.toString());
 
     res.status(201).json({
       token,
       user: user.toJSON(),
+      orgs,
+      currentOrgId: org._id.toString(),
     });
   } catch (err: any) {
     console.error('Register error:', err);
@@ -73,10 +119,13 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     }
 
     const token = generateToken(user);
+    const orgs = await getUserOrgs(user._id.toString());
 
     res.json({
       token,
       user: user.toJSON(),
+      orgs,
+      currentOrgId: user.currentOrgId || (orgs[0]?.id?.toString() ?? null),
     });
   } catch (err: any) {
     console.error('Login error:', err);
@@ -93,7 +142,13 @@ router.get('/me', authenticate, async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    res.json({ user: user.toJSON() });
+    const orgs = await getUserOrgs(user._id.toString());
+
+    res.json({
+      user: user.toJSON(),
+      orgs,
+      currentOrgId: user.currentOrgId || (orgs[0]?.id?.toString() ?? null),
+    });
   } catch (err: any) {
     console.error('Get profile error:', err);
     res.status(500).json({ error: 'Failed to fetch profile.' });
@@ -108,7 +163,15 @@ router.put('/me', authenticate, async (req: Request, res: Response): Promise<voi
     const updateFields: Record<string, any> = {};
 
     if (name !== undefined) updateFields.name = name;
-    if (currentOrgId !== undefined) updateFields.currentOrgId = currentOrgId;
+    if (currentOrgId !== undefined) {
+      // Verify user is a member of the org they're switching to
+      const membership = await OrgMember.findOne({ orgId: currentOrgId, userId: req.userId }).lean();
+      if (!membership) {
+        res.status(403).json({ error: 'Not a member of this organization.' });
+        return;
+      }
+      updateFields.currentOrgId = currentOrgId;
+    }
 
     if (settings) {
       if (settings.preferredModel !== undefined) {

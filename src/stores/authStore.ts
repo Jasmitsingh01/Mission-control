@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authApi } from '@/lib/api'
+import { useOrgStore } from '@/stores/orgStore'
 
 export interface User {
   id: string
@@ -7,6 +8,7 @@ export interface User {
   email: string
   avatar: string
   plan: 'free' | 'pro' | 'enterprise'
+  currentOrgId?: string
   createdAt: number
 }
 
@@ -47,6 +49,7 @@ function mapServerUser(data: any): User {
     email: data.email,
     avatar: data.avatar || data.name?.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || '',
     plan: data.plan || 'free',
+    currentOrgId: data.currentOrgId,
     createdAt: data.createdAt ? new Date(data.createdAt).getTime() : Date.now(),
   }
 }
@@ -64,6 +67,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem(TOKEN_KEY, data.token)
       saveUser(user)
       set({ user, isAuthenticated: true, isLoading: false })
+
+      // Initialize org context
+      if (data.orgs) {
+        useOrgStore.getState().initFromAuth(data.orgs, data.currentOrgId)
+      }
+
       return true
     } catch (err) {
       set({ isLoading: false })
@@ -79,6 +88,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem(TOKEN_KEY, data.token)
       saveUser(user)
       set({ user, isAuthenticated: true, isLoading: false })
+
+      // Initialize org context (auto-created personal workspace)
+      if (data.orgs) {
+        useOrgStore.getState().initFromAuth(data.orgs, data.currentOrgId)
+      }
+
       return true
     } catch (err) {
       set({ isLoading: false })
@@ -90,6 +105,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem(TOKEN_KEY)
     saveUser(null)
     set({ user: null, isAuthenticated: false })
+    useOrgStore.getState().reset()
   },
 
   loadUser: async () => {
@@ -104,11 +120,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = mapServerUser(data.user || data)
       saveUser(user)
       set({ user, isAuthenticated: true, isLoading: false })
+
+      // Sync org context
+      if (data.orgs) {
+        useOrgStore.getState().initFromAuth(data.orgs, data.currentOrgId)
+      }
     } catch {
-      // Token is invalid or expired - clear auth state
       localStorage.removeItem(TOKEN_KEY)
       saveUser(null)
       set({ user: null, isAuthenticated: false, isLoading: false })
+      useOrgStore.getState().reset()
     }
   },
 }))
