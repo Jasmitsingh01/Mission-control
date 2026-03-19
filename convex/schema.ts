@@ -3,6 +3,7 @@ import { v } from "convex/values"
 
 export default defineSchema({
   tasks: defineTable({
+    userId: v.string(),
     title: v.string(),
     description: v.string(),
     status: v.union(
@@ -28,9 +29,12 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_status", ["status"])
-    .index("by_status_position", ["status", "position"]),
+    .index("by_status_position", ["status", "position"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_status", ["userId", "status"]),
 
   agents: defineTable({
+    userId: v.string(),
     name: v.string(),
     description: v.string(),
     status: v.union(
@@ -57,9 +61,13 @@ export default defineSchema({
     lastActiveAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
     updatedAt: v.number(),
-  }).index("by_status", ["status"]),
+  })
+    .index("by_status", ["status"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_status", ["userId", "status"]),
 
   activity_events: defineTable({
+    userId: v.string(),
     type: v.union(
       v.literal("task_created"),
       v.literal("task_moved"),
@@ -90,9 +98,13 @@ export default defineSchema({
     actorId: v.optional(v.string()),
     relatedTaskId: v.optional(v.id("tasks")),
     relatedAgentId: v.optional(v.id("agents")),
-  }).index("by_type", ["type"]),
+  })
+    .index("by_type", ["type"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_type", ["userId", "type"]),
 
   scheduled_jobs: defineTable({
+    userId: v.string(),
     name: v.string(),
     description: v.string(),
     cronExpression: v.string(),
@@ -117,9 +129,11 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_status", ["status"])
-    .index("by_enabled_next_run", ["enabled", "nextRunAt"]),
+    .index("by_enabled_next_run", ["enabled", "nextRunAt"])
+    .index("by_userId", ["userId"]),
 
   memory_entries: defineTable({
+    userId: v.string(),
     agentId: v.id("agents"),
     sessionId: v.string(),
     type: v.union(
@@ -135,7 +149,9 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_agent", ["agentId"])
-    .index("by_agent_session", ["agentId", "sessionId"]),
+    .index("by_agent_session", ["agentId", "sessionId"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_agent", ["userId", "agentId"]),
 
   skills: defineTable({
     name: v.string(),
@@ -159,7 +175,11 @@ export default defineSchema({
     .index("by_category", ["category"]),
 
   installed_skills: defineTable({
+    userId: v.string(),
     skillId: v.id("skills"),
     config: v.optional(v.any()),
-  }).index("by_skill", ["skillId"]),
+  })
+    .index("by_skill", ["skillId"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_skill", ["userId", "skillId"]),
 })

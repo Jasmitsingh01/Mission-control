@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authApi } from '@/lib/api'
 
 export interface User {
   id: string
@@ -16,13 +17,15 @@ interface AuthState {
   login: (email: string, password: string) => Promise<boolean>
   signup: (name: string, email: string, password: string) => Promise<boolean>
   logout: () => void
+  loadUser: () => Promise<void>
 }
 
-const STORAGE_KEY = 'mc_auth_user'
+const TOKEN_KEY = 'mc_auth_token'
+const USER_KEY = 'mc_auth_user'
 
-function loadUser(): User | null {
+function loadStoredUser(): User | null {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(USER_KEY)
     return stored ? JSON.parse(stored) : null
   } catch {
     return null
@@ -31,52 +34,81 @@ function loadUser(): User | null {
 
 function saveUser(user: User | null) {
   if (user) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+    localStorage.setItem(USER_KEY, JSON.stringify(user))
   } else {
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(USER_KEY)
+  }
+}
+
+function mapServerUser(data: any): User {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    email: data.email,
+    avatar: data.avatar || data.name?.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || '',
+    plan: data.plan || 'free',
+    createdAt: data.createdAt ? new Date(data.createdAt).getTime() : Date.now(),
   }
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: loadUser(),
-  isAuthenticated: !!loadUser(),
+  user: loadStoredUser(),
+  isAuthenticated: !!loadStoredUser() && !!localStorage.getItem(TOKEN_KEY),
   isLoading: false,
 
-  login: async (email, _password) => {
+  login: async (email, password) => {
     set({ isLoading: true })
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 1000))
-    const user: User = {
-      id: `user_${Date.now()}`,
-      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      email,
-      avatar: email.slice(0, 2).toUpperCase(),
-      plan: 'pro',
-      createdAt: Date.now(),
+    try {
+      const data = await authApi.login(email, password)
+      const user = mapServerUser(data.user)
+      localStorage.setItem(TOKEN_KEY, data.token)
+      saveUser(user)
+      set({ user, isAuthenticated: true, isLoading: false })
+      return true
+    } catch (err) {
+      set({ isLoading: false })
+      throw err
     }
-    saveUser(user)
-    set({ user, isAuthenticated: true, isLoading: false })
-    return true
   },
 
-  signup: async (name, email, _password) => {
+  signup: async (name, email, password) => {
     set({ isLoading: true })
-    await new Promise((r) => setTimeout(r, 1200))
-    const user: User = {
-      id: `user_${Date.now()}`,
-      name,
-      email,
-      avatar: name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2),
-      plan: 'free',
-      createdAt: Date.now(),
+    try {
+      const data = await authApi.register(name, email, password)
+      const user = mapServerUser(data.user)
+      localStorage.setItem(TOKEN_KEY, data.token)
+      saveUser(user)
+      set({ user, isAuthenticated: true, isLoading: false })
+      return true
+    } catch (err) {
+      set({ isLoading: false })
+      throw err
     }
-    saveUser(user)
-    set({ user, isAuthenticated: true, isLoading: false })
-    return true
   },
 
   logout: () => {
+    localStorage.removeItem(TOKEN_KEY)
     saveUser(null)
     set({ user: null, isAuthenticated: false })
+  },
+
+  loadUser: async () => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (!token) {
+      set({ user: null, isAuthenticated: false })
+      return
+    }
+    set({ isLoading: true })
+    try {
+      const data = await authApi.me()
+      const user = mapServerUser(data.user || data)
+      saveUser(user)
+      set({ user, isAuthenticated: true, isLoading: false })
+    } catch {
+      // Token is invalid or expired - clear auth state
+      localStorage.removeItem(TOKEN_KEY)
+      saveUser(null)
+      set({ user: null, isAuthenticated: false, isLoading: false })
+    }
   },
 }))

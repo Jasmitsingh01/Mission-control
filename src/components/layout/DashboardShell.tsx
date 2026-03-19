@@ -1,8 +1,12 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { useConvexSync } from '@/hooks/useConvexSync'
 
 export function DashboardShell() {
+  // Sync Convex real-time data into Zustand stores
+  useConvexSync()
+
   return (
     <div className="flex h-screen bg-surface-dim">
       <Sidebar />
