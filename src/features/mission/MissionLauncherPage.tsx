@@ -10,10 +10,6 @@ import {
   Bot,
   ListTodo,
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/stores/taskStore'
 import { useAgentStore } from '@/stores/agentStore'
@@ -75,7 +71,6 @@ export function MissionLauncherPage() {
     const createNext = () => {
       if (currentStep < plan.agents.length) {
         const agentData = plan.agents[currentStep]
-        // Use a predictable ID based on store behavior
         addAgent({
           name: agentData.name,
           description: agentData.description,
@@ -146,22 +141,21 @@ export function MissionLauncherPage() {
     setTimeout(createNext, 500)
   }, [plan, addAgent, addTask, addEvent])
 
+  const stepIndex = step === 'describe' ? 0 : step === 'planning' ? 0 : step === 'review' ? 1 : step === 'launching' ? 2 : 2
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 mb-4">
-          <Rocket className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">Mission Launcher</span>
-        </div>
-        <h1 className="text-3xl font-bold text-foreground">
-          {step === 'describe' && 'Describe Your Mission'}
+      <div className="text-center pt-4">
+        <span className="font-mono text-primary text-xs tracking-widest uppercase">Workflow Architect</span>
+        <h1 className="text-4xl font-black text-on-surface mt-2">
+          {step === 'describe' && 'Construct New Team'}
           {step === 'planning' && 'Generating Your Team...'}
           {step === 'review' && 'Review Your Mission Plan'}
           {step === 'launching' && 'Launching Mission...'}
           {step === 'done' && 'Mission Launched!'}
         </h1>
-        <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
+        <p className="text-sm text-on-surface-variant mt-3 max-w-lg mx-auto">
           {step === 'describe' && 'Tell us what you want to build and we\'ll assemble the perfect AI agent team.'}
           {step === 'planning' && 'Analyzing your requirements and assembling the optimal agent team...'}
           {step === 'review' && 'Review the generated plan. You can launch it or go back to adjust.'}
@@ -170,65 +164,71 @@ export function MissionLauncherPage() {
         </p>
       </div>
 
-      {/* Step indicator */}
-      <div className="flex items-center justify-center gap-2">
-        {(['describe', 'review', 'done'] as const).map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
+      {/* Step indicator circles */}
+      <div className="flex items-center justify-center gap-3">
+        {[1, 2, 3].map((num, i) => (
+          <div key={num} className="flex items-center gap-3">
             <div className={cn(
-              'h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors',
-              step === s || (['review', 'launching', 'done'].includes(step) && i <= 1) || (step === 'done' && i <= 2)
-                ? 'bg-primary border-primary text-primary-foreground'
-                : 'border-border text-muted-foreground'
+              "h-10 w-10 rounded-full flex items-center justify-center font-mono text-sm font-bold border-2 transition-all",
+              i <= stepIndex
+                ? 'synthetic-gradient border-transparent text-white shadow-[0_0_20px_rgba(103,80,164,0.3)]'
+                : 'border-outline-variant/30 text-outline bg-surface-container'
             )}>
-              {step === 'done' && i <= 2 ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              {step === 'done' || (i < stepIndex) ? <CheckCircle2 className="h-5 w-5" /> : num}
             </div>
-            {i < 2 && <div className={cn('w-16 h-0.5', step !== 'describe' && i === 0 ? 'bg-primary' : step === 'done' ? 'bg-primary' : 'bg-border')} />}
+            {i < 2 && (
+              <div className={cn(
+                'w-20 h-0.5 rounded-full transition-all',
+                i < stepIndex ? 'synthetic-gradient' : 'bg-outline-variant/20'
+              )} />
+            )}
           </div>
         ))}
       </div>
 
       {/* STEP: Describe */}
       {step === 'describe' && (
-        <div className="space-y-4">
-          <Card>
-            <CardContent className="pt-6 pb-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Mission Name</label>
-                  <Input
-                    placeholder="e.g., Crypto Trading Platform"
-                    value={missionName}
-                    onChange={(e) => setMissionName(e.target.value)}
-                    className="text-base"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">
-                    Describe what you want to build
-                    <span className="text-muted-foreground font-normal ml-1">(be as detailed as possible)</span>
-                  </label>
+        <div className="space-y-6">
+          <div className="bg-surface-container-low rounded-xl border border-outline-variant/10 p-6">
+            <div className="space-y-5">
+              <div>
+                <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">Mission Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Crypto Trading Platform"
+                  value={missionName}
+                  onChange={(e) => setMissionName(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-4 py-3 text-base text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                />
+              </div>
+              <div>
+                <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
+                  Describe what you want to build
+                  <span className="text-on-surface-variant font-normal normal-case tracking-normal text-[11px] ml-2">(be as detailed as possible)</span>
+                </label>
+                <div className="relative group">
                   <textarea
                     placeholder="Describe your project, features, requirements, tech stack preferences, and any specific constraints..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={6}
-                    className="flex w-full rounded-md border border-input bg-background px-4 py-3 text-sm leading-relaxed ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                    className="w-full rounded-xl border border-outline-variant/20 bg-surface-container-lowest px-4 py-3 text-sm leading-relaxed text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 focus:shadow-[0_0_30px_rgba(103,80,164,0.1)] resize-none transition-all"
                   />
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    {description.length} characters — the more detail, the better the team and task breakdown
-                  </p>
                 </div>
+                <p className="font-mono text-[10px] text-outline mt-2">
+                  {description.length} characters — the more detail, the better the team and task breakdown
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Example prompts */}
+          {/* Quick prompt pills */}
           <div>
-            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              Try an example:
+            <p className="font-mono text-[10px] uppercase tracking-widest text-outline mb-3 flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-primary" />
+              Quick prompts
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="flex flex-wrap gap-2">
               {examplePrompts.map((prompt, i) => (
                 <button
                   key={i}
@@ -236,9 +236,9 @@ export function MissionLauncherPage() {
                     setDescription(prompt)
                     setMissionName(prompt.split(' ').slice(0, 4).join(' ').replace(/^(build|create|set up|design)\s+/i, ''))
                   }}
-                  className="text-left rounded-lg border border-border p-3 text-xs text-muted-foreground hover:border-primary/30 hover:text-foreground transition-colors"
+                  className="rounded-full border border-outline-variant/20 px-4 py-2 text-[11px] text-on-surface-variant hover:border-primary/30 hover:text-primary hover:bg-primary/5 transition-all"
                 >
-                  {prompt}
+                  {prompt.length > 60 ? prompt.slice(0, 60) + '...' : prompt}
                 </button>
               ))}
             </div>
@@ -246,149 +246,171 @@ export function MissionLauncherPage() {
 
           {/* Error message */}
           {error && (
-            <Card className="border-red-500/30 bg-red-500/5">
-              <CardContent className="py-3">
-                <p className="text-sm text-red-400">{error}</p>
-              </CardContent>
-            </Card>
+            <div className="bg-error-container/10 border border-error/30 rounded-xl p-4">
+              <p className="text-sm text-error">{error}</p>
+            </div>
           )}
 
-          <div className="flex justify-end">
-            <Button
-              size="lg"
-              disabled={!description.trim()}
-              onClick={handleGenerate}
-              className="gap-2"
+          {/* Bottom action bar */}
+          <div className="flex items-center justify-between pt-2">
+            <button
+              onClick={() => {
+                setDescription('')
+                setMissionName('')
+              }}
+              className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg text-outline hover:text-on-surface-variant transition-colors"
             >
-              <Sparkles className="h-4 w-4" />
-              Generate Mission Plan
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+              Discard Draft
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                disabled={!description.trim()}
+                className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Preview Plan
+              </button>
+              <button
+                disabled={!description.trim()}
+                onClick={handleGenerate}
+                className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(103,80,164,0.2)]"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Launch Team
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* STEP: Planning (loading) */}
       {step === 'planning' && (
-        <Card>
-          <CardContent className="py-16">
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative">
-                <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                <Sparkles className="h-5 w-5 text-primary absolute -top-1 -right-1 animate-pulse" />
-              </div>
-              <p className="text-sm text-muted-foreground mt-4 animate-pulse">
-                AI is analyzing your requirements...
-              </p>
-              <p className="text-xs text-muted-foreground/60 mt-2">
-                Powered by OpenRouter
-              </p>
-              <div className="flex items-center gap-4 mt-6 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Bot className="h-3.5 w-3.5" /> Selecting agents</span>
-                <span className="flex items-center gap-1"><ListTodo className="h-3.5 w-3.5" /> Breaking down tasks</span>
-                <span className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> Optimizing workflow</span>
-              </div>
+        <div className="bg-surface-container-low rounded-xl border border-outline-variant/10 p-16">
+          <div className="flex flex-col items-center justify-center">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 text-primary animate-spin" />
+              <Sparkles className="h-5 w-5 text-secondary absolute -top-1 -right-1 animate-pulse" />
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-sm text-on-surface-variant mt-4 animate-pulse">
+              AI is analyzing your requirements...
+            </p>
+            <p className="font-mono text-[10px] text-outline mt-2">
+              Powered by OpenRouter
+            </p>
+            <div className="flex items-center gap-6 mt-6">
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-on-surface-variant">
+                <Bot className="h-3.5 w-3.5 text-secondary" /> Selecting agents
+              </span>
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-on-surface-variant">
+                <ListTodo className="h-3.5 w-3.5 text-primary" /> Breaking down tasks
+              </span>
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-on-surface-variant">
+                <Sparkles className="h-3.5 w-3.5 text-tertiary" /> Optimizing workflow
+              </span>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* STEP: Review */}
       {step === 'review' && plan && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <MissionReview plan={plan} />
 
           <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
+            <button
               onClick={() => setStep('describe')}
-              className="gap-2"
+              className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               Back to Edit
-            </Button>
-            <Button
-              size="lg"
+            </button>
+            <button
               onClick={handleLaunch}
-              className="gap-2"
+              className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-[0_0_20px_rgba(103,80,164,0.2)]"
             >
-              <Rocket className="h-4 w-4" />
+              <Rocket className="h-3.5 w-3.5" />
               Launch Mission
-            </Button>
+            </button>
           </div>
         </div>
       )}
 
       {/* STEP: Launching */}
       {step === 'launching' && (
-        <Card>
-          <CardContent className="py-16">
-            <div className="flex flex-col items-center justify-center">
-              <Rocket className="h-12 w-12 text-primary animate-bounce" />
-              <p className="text-lg font-medium mt-4">Deploying agents and tasks...</p>
-              <div className="w-64 mt-6">
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all duration-300"
-                    style={{ width: `${launchProgress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  {launchProgress}% complete
-                </p>
+        <div className="bg-surface-container-low rounded-xl border border-outline-variant/10 p-16">
+          <div className="flex flex-col items-center justify-center">
+            <Rocket className="h-12 w-12 text-primary animate-bounce" />
+            <p className="text-lg font-semibold text-on-surface mt-4">Deploying agents and tasks...</p>
+            <div className="w-64 mt-6">
+              <div className="h-1.5 rounded-full bg-surface-container-lowest overflow-hidden">
+                <div
+                  className="h-full synthetic-gradient rounded-full transition-all duration-300"
+                  style={{ width: `${launchProgress}%` }}
+                />
               </div>
+              <p className="font-mono text-[10px] text-outline text-center mt-2">
+                {launchProgress}% complete
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* STEP: Done */}
       {step === 'done' && plan && (
-        <div className="space-y-4">
-          <Card className="border-green-500/30 bg-green-500/5">
-            <CardContent className="py-8">
-              <div className="flex flex-col items-center justify-center">
-                <CheckCircle2 className="h-14 w-14 text-green-400 mb-4" />
-                <h2 className="text-xl font-bold">{plan.missionName}</h2>
-                <p className="text-sm text-muted-foreground mt-1">{plan.summary}</p>
-                <div className="flex items-center gap-3 mt-4">
-                  <Badge className="bg-green-500/20 text-green-400 text-sm gap-1 py-1">
-                    <Bot className="h-3.5 w-3.5" />
-                    {plan.agents.length} agents deployed
-                  </Badge>
-                  <Badge className="bg-blue-500/20 text-blue-400 text-sm gap-1 py-1">
-                    <ListTodo className="h-3.5 w-3.5" />
-                    {plan.tasks.length} tasks assigned
-                  </Badge>
-                </div>
+        <div className="space-y-6">
+          <div className="bg-surface-container-low rounded-xl border border-green-500/20 p-8">
+            <div className="flex flex-col items-center justify-center">
+              <CheckCircle2 className="h-14 w-14 text-green-400 mb-4" />
+              <h2 className="text-xl font-bold text-on-surface">{plan.missionName}</h2>
+              <p className="text-sm text-on-surface-variant mt-1">{plan.summary}</p>
+              <div className="flex items-center gap-3 mt-4">
+                <span className="font-mono text-[10px] font-bold uppercase bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                  <Bot className="h-3.5 w-3.5" />
+                  {plan.agents.length} agents deployed
+                </span>
+                <span className="font-mono text-[10px] font-bold uppercase bg-secondary/10 text-secondary px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                  <ListTodo className="h-3.5 w-3.5" />
+                  {plan.tasks.length} tasks assigned
+                </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           <div className="flex items-center justify-center gap-3">
-            <Button variant="outline" onClick={() => navigate('/agents')} className="gap-2">
-              <Bot className="h-4 w-4" />
+            <button
+              onClick={() => navigate('/dashboard/agents')}
+              className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2"
+            >
+              <Bot className="h-3.5 w-3.5" />
               View Agents
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/board')} className="gap-2">
-              <ListTodo className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => navigate('/dashboard/board')}
+              className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2"
+            >
+              <ListTodo className="h-3.5 w-3.5" />
               View Task Board
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/activity')} className="gap-2">
+            </button>
+            <button
+              onClick={() => navigate('/dashboard/activity')}
+              className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-all"
+            >
               Activity Feed
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={() => {
                 setStep('describe')
                 setDescription('')
                 setMissionName('')
                 setPlan(null)
               }}
-              className="gap-2"
+              className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
             >
-              <Rocket className="h-4 w-4" />
+              <Rocket className="h-3.5 w-3.5" />
               Launch Another
-            </Button>
+            </button>
           </div>
         </div>
       )}

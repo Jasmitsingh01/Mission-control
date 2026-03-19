@@ -1,84 +1,163 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(240 10% 3.9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(240 10% 3.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(240 10% 3.9%);
-  --color-primary: hsl(240 5.9% 10%);
-  --color-primary-foreground: hsl(0 0% 98%);
-  --color-secondary: hsl(240 4.8% 95.9%);
-  --color-secondary-foreground: hsl(240 5.9% 10%);
-  --color-muted: hsl(240 4.8% 95.9%);
-  --color-muted-foreground: hsl(240 3.8% 46.1%);
-  --color-accent: hsl(240 4.8% 95.9%);
-  --color-accent-foreground: hsl(240 5.9% 10%);
-  --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  --color-border: hsl(240 5.9% 90%);
-  --color-input: hsl(240 5.9% 90%);
-  --color-ring: hsl(240 5.9% 10%);
-  --color-chart-1: hsl(12 76% 61%);
-  --color-chart-2: hsl(173 58% 39%);
-  --color-chart-3: hsl(197 37% 24%);
-  --color-chart-4: hsl(43 74% 66%);
-  --color-chart-5: hsl(27 87% 67%);
-  --color-sidebar-background: hsl(0 0% 98%);
-  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
-  --color-sidebar-primary: hsl(240 5.9% 10%);
-  --color-sidebar-primary-foreground: hsl(0 0% 98%);
-  --color-sidebar-accent: hsl(240 4.8% 95.9%);
-  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --color-sidebar-border: hsl(220 13% 91%);
-  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
-  --radius: 0.625rem;
+  /* AgentForge Light Theme */
+  /* Surface tokens - light backgrounds */
+  --color-surface-dim: #f5f3f7;
+  --color-surface: #ffffff;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f6fa;
+  --color-surface-container: #f2f0f5;
+  --color-surface-container-high: #ece9f0;
+  --color-surface-container-highest: #e6e3eb;
+  --color-surface-variant: #e6e0ec;
+
+  /* On-surface tokens - dark text */
+  --color-on-surface: #1c1b1f;
+  --color-on-surface-variant: #49454f;
+  --color-on-background: #1c1b1f;
+
+  /* Primary tokens */
+  --color-primary: #6750a4;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #7c3aed;
+  --color-on-primary-container: #ffffff;
+  --color-primary-fixed: #eaddff;
+  --color-primary-fixed-dim: #d0bcff;
+  --color-on-primary-fixed: #21005d;
+  --color-on-primary-fixed-variant: #4f378b;
+  --color-inverse-primary: #d0bcff;
+
+  /* Secondary tokens */
+  --color-secondary: #0891b2;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #cff8ff;
+  --color-on-secondary-container: #064e5e;
+  --color-secondary-fixed: #cff8ff;
+  --color-secondary-fixed-dim: #a0ecff;
+  --color-on-secondary-fixed: #001f26;
+  --color-on-secondary-fixed-variant: #004e5c;
+
+  /* Tertiary tokens */
+  --color-tertiary: #ea580c;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #ffdbcc;
+  --color-on-tertiary-container: #5c2100;
+  --color-tertiary-fixed: #ffdcc6;
+  --color-tertiary-fixed-dim: #ffb784;
+  --color-on-tertiary-fixed: #301400;
+  --color-on-tertiary-fixed-variant: #713700;
+
+  /* Error tokens */
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-error-container: #fef2f2;
+  --color-on-error-container: #991b1b;
+
+  /* Outline tokens */
+  --color-outline: #79747e;
+  --color-outline-variant: #cac4d0;
+
+  /* Inverse tokens */
+  --color-inverse-surface: #313033;
+  --color-inverse-on-surface: #f4eff4;
+
+  /* Surface tint */
+  --color-surface-tint: #6750a4;
+
+  /* Shadcn compatibility */
+  --color-background: #f5f3f7;
+  --color-foreground: #1c1b1f;
+  --color-card: #ffffff;
+  --color-card-foreground: #1c1b1f;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1c1b1f;
+  --color-muted: #f2f0f5;
+  --color-muted-foreground: #79747e;
+  --color-accent: #ece9f0;
+  --color-accent-foreground: #1c1b1f;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e6e0ec;
+  --color-input: #ffffff;
+  --color-ring: #6750a4;
+  --color-chart-1: #6750a4;
+  --color-chart-2: #0891b2;
+  --color-chart-3: #ea580c;
+  --color-chart-4: #7c3aed;
+  --color-chart-5: #0ea5e9;
+  --color-sidebar-background: #ffffff;
+  --color-sidebar-foreground: #49454f;
+  --color-sidebar-primary: #6750a4;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #f2f0f5;
+  --color-sidebar-accent-foreground: #6750a4;
+  --color-sidebar-border: #e6e0ec;
+  --color-sidebar-ring: #6750a4;
+  --radius: 0.5rem;
+
+  /* Font families - system fonts */
+  --font-headline: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
-.dark {
-  --color-background: hsl(222 47% 6%);
-  --color-foreground: hsl(210 40% 98%);
-  --color-card: hsl(222 47% 8%);
-  --color-card-foreground: hsl(210 40% 98%);
-  --color-popover: hsl(222 47% 8%);
-  --color-popover-foreground: hsl(210 40% 98%);
-  --color-primary: hsl(217 91% 60%);
-  --color-primary-foreground: hsl(222 47% 6%);
-  --color-secondary: hsl(217 33% 17%);
-  --color-secondary-foreground: hsl(210 40% 98%);
-  --color-muted: hsl(217 33% 17%);
-  --color-muted-foreground: hsl(215 20% 55%);
-  --color-accent: hsl(217 33% 17%);
-  --color-accent-foreground: hsl(210 40% 98%);
-  --color-destructive: hsl(0 63% 31%);
-  --color-destructive-foreground: hsl(210 40% 98%);
-  --color-border: hsl(217 33% 17%);
-  --color-input: hsl(217 33% 17%);
-  --color-ring: hsl(224 64% 33%);
-  --color-chart-1: hsl(220 70% 50%);
-  --color-chart-2: hsl(160 60% 45%);
-  --color-chart-3: hsl(30 80% 55%);
-  --color-chart-4: hsl(280 65% 60%);
-  --color-chart-5: hsl(340 75% 55%);
-  --color-sidebar-background: hsl(222 47% 6%);
-  --color-sidebar-foreground: hsl(215 20% 65%);
-  --color-sidebar-primary: hsl(217 91% 60%);
-  --color-sidebar-primary-foreground: hsl(0 0% 100%);
-  --color-sidebar-accent: hsl(217 33% 17%);
-  --color-sidebar-accent-foreground: hsl(210 40% 98%);
-  --color-sidebar-border: hsl(217 33% 17%);
-  --color-sidebar-ring: hsl(224 64% 33%);
+/* Synthetic gradient utility */
+.synthetic-gradient {
+  background: linear-gradient(135deg, #7c3aed 0%, #0891b2 100%);
+}
+
+/* Glass panel utility */
+.glass-panel {
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Recessed well utility */
+.recessed-well {
+  background-color: #f2f0f5;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Terminal glow */
+.terminal-glow {
+  color: #0891b2;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f5f3f7;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cac4d0;
+  border-radius: 10px;
 }
 
 @layer base {
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: #cac4d0 #f5f3f7;
+  }
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: #f5f3f7;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #cac4d0;
+    border-radius: 10px;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

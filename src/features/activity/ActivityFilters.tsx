@@ -1,13 +1,12 @@
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Severity, ActivityType } from '@/stores/activityStore'
 
 const severityFilters: { value: Severity | 'all'; label: string; color: string }[] = [
   { value: 'all', label: 'All', color: '' },
-  { value: 'success', label: 'Success', color: 'text-green-400' },
-  { value: 'info', label: 'Info', color: 'text-blue-400' },
-  { value: 'warning', label: 'Warning', color: 'text-yellow-400' },
-  { value: 'error', label: 'Error', color: 'text-red-400' },
+  { value: 'success', label: 'Success', color: 'text-secondary' },
+  { value: 'info', label: 'Info', color: 'text-primary' },
+  { value: 'warning', label: 'Warning', color: 'text-tertiary' },
+  { value: 'error', label: 'Error', color: 'text-error' },
 ]
 
 const typeFilters: { value: ActivityType | 'all'; label: string }[] = [
@@ -38,27 +37,30 @@ export function ActivityFilters({ severity, type, onSeverityChange, onTypeChange
     <div className="space-y-3">
       {/* Severity */}
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-muted-foreground font-medium mr-1">Severity:</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold mr-2">Severity:</span>
         {severityFilters.map((f) => (
-          <Button
+          <button
             key={f.value}
-            variant={severity === f.value ? 'default' : 'ghost'}
-            size="sm"
-            className={cn('h-7 text-xs', severity !== f.value && f.color)}
+            className={cn(
+              'h-7 px-3 rounded-full font-[\'JetBrains_Mono\'] text-[10px] uppercase tracking-widest font-bold transition-colors',
+              severity === f.value
+                ? 'bg-primary text-on-primary'
+                : cn('bg-surface-container-high hover:text-on-surface', f.color || 'text-on-surface-variant')
+            )}
             onClick={() => onSeverityChange(f.value)}
           >
             {f.label}
-          </Button>
+          </button>
         ))}
       </div>
 
       {/* Type */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-xs text-muted-foreground font-medium mr-1">Type:</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold mr-2">Type:</span>
         <select
           value={type}
           onChange={(e) => onTypeChange(e.target.value as ActivityType | 'all')}
-          className="h-7 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-7 rounded-lg bg-surface-container-lowest border-none px-2 font-mono text-[11px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/40"
         >
           {typeFilters.map((f) => (
             <option key={f.value} value={f.value}>{f.label}</option>

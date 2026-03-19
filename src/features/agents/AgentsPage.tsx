@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react'
 import { Plus, Bot, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { useAgentStore } from '@/stores/agentStore'
 import type { Agent, AgentStatus } from '@/stores/agentStore'
 import { AgentCard } from './AgentCard'
 import { SpawnAgentDialog } from './SpawnAgentDialog'
 import { AgentDetailView } from './AgentDetailView'
+import { cn } from '@/lib/utils'
 
 export function AgentsPage() {
   const agents = useAgentStore((s) => s.agents)
@@ -28,51 +27,55 @@ export function AgentsPage() {
   }), [agents])
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Agents</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Agents</h1>
+          <p className="text-sm text-on-surface-variant mt-2">
             Manage and monitor your AI agent fleet
           </p>
         </div>
-        <Button size="sm" onClick={() => setSpawnOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <button
+          className="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-on-primary font-mono text-[10px] uppercase tracking-widest font-bold transition-colors hover:bg-primary/90"
+          onClick={() => setSpawnOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
           Spawn Agent
-        </Button>
+        </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Total Agents', value: stats.total, color: '' },
-          { label: 'Running', value: stats.running, color: 'text-green-400' },
-          { label: 'Idle', value: stats.idle, color: 'text-muted-foreground' },
-          { label: 'Errors', value: stats.error, color: 'text-red-400' },
+          { label: 'Total Agents', value: stats.total, color: 'text-on-surface' },
+          { label: 'Running', value: stats.running, color: 'text-secondary' },
+          { label: 'Idle', value: stats.idle, color: 'text-on-surface-variant' },
+          { label: 'Errors', value: stats.error, color: 'text-error' },
         ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground">{s.label}</p>
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            </CardContent>
-          </Card>
+          <div key={s.label} className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">{s.label}</p>
+            <p className={cn('text-2xl font-bold mt-1 font-[\'JetBrains_Mono\']', s.color)}>{s.value}</p>
+          </div>
         ))}
       </div>
 
       {/* Filter */}
       <div className="flex items-center gap-1.5">
-        <Filter className="h-4 w-4 text-muted-foreground mr-1" />
+        <Filter className="h-4 w-4 text-outline mr-1" />
         {(['all', 'running', 'idle', 'paused', 'stopped', 'error'] as const).map((s) => (
-          <Button
+          <button
             key={s}
-            variant={statusFilter === s ? 'default' : 'ghost'}
-            size="sm"
-            className="h-7 text-xs capitalize"
+            className={cn(
+              'h-7 px-3 rounded-full font-[\'JetBrains_Mono\'] text-[10px] uppercase tracking-widest font-bold capitalize transition-colors',
+              statusFilter === s
+                ? 'bg-primary text-on-primary'
+                : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+            )}
             onClick={() => setStatusFilter(s)}
           >
             {s}
-          </Button>
+          </button>
         ))}
       </div>
 
@@ -88,7 +91,7 @@ export function AgentsPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center py-16 text-on-surface-variant">
           <Bot className="h-10 w-10 mb-3 opacity-50" />
           <p className="text-sm">No agents match your filter</p>
         </div>

@@ -1,101 +1,123 @@
+import { useState } from 'react'
 import { Monitor, Bell, Shield, Database, Palette } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { useTheme } from '@/hooks/useTheme'
 
 export function SettingsPage() {
   const { theme, toggleTheme } = useTheme()
+  const [notifications, setNotifications] = useState({
+    taskUpdates: true,
+    agentErrors: true,
+    jobCompletions: false,
+    activityDigest: false,
+  })
+
+  const toggleNotification = (key: keyof typeof notifications) => {
+    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 pb-8 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Settings</h1>
+        <p className="text-sm text-on-surface-variant mt-2">
           Configure your Mission Control instance
         </p>
       </div>
 
       {/* Appearance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Appearance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Theme</p>
-              <p className="text-xs text-muted-foreground">Switch between dark and light mode</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={toggleTheme} className="capitalize">
-              {theme === 'dark' ? 'Dark' : 'Light'} Mode
-            </Button>
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <div className="flex items-center gap-2 mb-4">
+          <Palette className="h-4 w-4 text-primary" />
+          <span className="font-semibold text-sm text-on-surface">Appearance</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-on-surface">Theme</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-outline mt-1">Switch between dark and light mode</p>
           </div>
-        </CardContent>
-      </Card>
+          <button
+            className="font-mono text-[10px] uppercase tracking-widest font-bold px-4 py-2 rounded-lg bg-surface-container-highest text-primary border border-primary/20 hover:bg-primary/10 transition-colors"
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? 'Dark' : 'Light'} Mode
+          </button>
+        </div>
+      </div>
 
       {/* Notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell className="h-4 w-4 text-primary" />
+          <span className="font-semibold text-sm text-on-surface">Notifications</span>
+        </div>
+        <div className="space-y-4">
           {[
-            { label: 'Task Updates', desc: 'Get notified when tasks change status', enabled: true },
-            { label: 'Agent Errors', desc: 'Alert when an agent encounters an error', enabled: true },
-            { label: 'Job Completions', desc: 'Notify when scheduled jobs finish', enabled: false },
-            { label: 'Activity Digest', desc: 'Daily summary of all activity', enabled: false },
+            { key: 'taskUpdates' as const, label: 'Task Updates', desc: 'Get notified when tasks change status' },
+            { key: 'agentErrors' as const, label: 'Agent Errors', desc: 'Alert when an agent encounters an error' },
+            { key: 'jobCompletions' as const, label: 'Job Completions', desc: 'Notify when scheduled jobs finish' },
+            { key: 'activityDigest' as const, label: 'Activity Digest', desc: 'Daily summary of all activity' },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between">
+            <div key={item.key} className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.desc}</p>
+                <p className="text-sm font-medium text-on-surface">{item.label}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-outline mt-0.5">{item.desc}</p>
               </div>
-              <Badge variant={item.enabled ? 'default' : 'secondary'} className="text-xs cursor-pointer">
-                {item.enabled ? 'On' : 'Off'}
-              </Badge>
+              <button
+                onClick={() => toggleNotification(item.key)}
+                className={cn(
+                  'relative w-10 h-5 rounded-full transition-colors',
+                  notifications[item.key] ? 'bg-primary' : 'bg-surface-container-highest'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform',
+                    notifications[item.key] && 'translate-x-5'
+                  )}
+                />
+              </button>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* API Keys */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            API Configuration
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <div className="flex items-center gap-2 mb-4">
+          <Shield className="h-4 w-4 text-primary" />
+          <span className="font-semibold text-sm text-on-surface">API Configuration</span>
+        </div>
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">OpenRouter (Mission Planner)</p>
-              <p className="text-xs text-muted-foreground font-mono">
+              <p className="text-sm font-medium text-on-surface">OpenRouter (Mission Planner)</p>
+              <p className="font-mono text-[11px] text-outline mt-0.5">
                 {import.meta.env.VITE_OPENROUTER_API_KEY ? '••••••••' + import.meta.env.VITE_OPENROUTER_API_KEY.slice(-8) : 'Not configured'}
               </p>
             </div>
-            <Badge variant={import.meta.env.VITE_OPENROUTER_API_KEY ? 'default' : 'secondary'} className="text-xs">
+            <span className={cn(
+              "font-mono text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-full",
+              import.meta.env.VITE_OPENROUTER_API_KEY
+                ? 'bg-secondary/10 text-secondary border border-secondary/20'
+                : 'bg-surface-container-highest text-outline'
+            )}>
               {import.meta.env.VITE_OPENROUTER_API_KEY ? 'Active' : 'Missing'}
-            </Badge>
+            </span>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Planner Model</p>
-              <p className="text-xs text-muted-foreground font-mono">
+              <p className="text-sm font-medium text-on-surface">Planner Model</p>
+              <p className="font-mono text-[11px] text-outline mt-0.5">
                 {import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-001'}
               </p>
             </div>
-            <Badge variant="secondary" className="text-xs">via .env</Badge>
+            <span className="font-mono text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-full bg-surface-container-highest text-outline">
+              via .env
+            </span>
           </div>
-          <Separator className="my-2" />
+          <Separator className="my-2 bg-outline-variant/10" />
           {[
             { provider: 'Anthropic', configured: false },
             { provider: 'OpenAI', configured: false },
@@ -103,47 +125,46 @@ export function SettingsPage() {
           ].map((key) => (
             <div key={key.provider} className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">{key.provider}</p>
-                <p className="text-xs text-muted-foreground font-mono">
+                <p className="text-sm font-medium text-on-surface">{key.provider}</p>
+                <p className="font-mono text-[11px] text-outline mt-0.5">
                   {key.configured ? '••••••••••••••••' : 'Not configured'}
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="text-xs">
+              <button className="font-mono text-[10px] uppercase tracking-widest font-bold px-4 py-2 rounded-lg bg-surface-container-highest text-primary border border-primary/20 hover:bg-primary/10 transition-colors">
                 {key.configured ? 'Update' : 'Add Key'}
-              </Button>
+              </button>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* System */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Monitor className="h-4 w-4" />
-            System Info
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
-            <span className="text-muted-foreground">Version</span>
-            <span className="font-mono">1.0.0-beta</span>
-            <span className="text-muted-foreground">Runtime</span>
-            <span className="font-mono">Vite + React 19</span>
-            <span className="text-muted-foreground">Backend</span>
-            <span className="font-mono">Convex (pending setup)</span>
-            <span className="text-muted-foreground">Environment</span>
-            <span className="font-mono">Development</span>
-          </div>
-          <Separator className="my-4" />
-          <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              Currently using local Zustand stores. Connect Convex for real-time sync.
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <div className="flex items-center gap-2 mb-4">
+          <Monitor className="h-4 w-4 text-primary" />
+          <span className="font-semibold text-sm text-on-surface">System Info</span>
+        </div>
+        <div className="grid grid-cols-2 gap-y-3 gap-x-6">
+          {[
+            { label: 'Version', value: '1.0.0-beta' },
+            { label: 'Runtime', value: 'Vite + React 19' },
+            { label: 'Backend', value: 'Convex (pending setup)' },
+            { label: 'Environment', value: 'Development' },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">{item.label}</span>
+              <span className="font-mono text-[11px] text-on-surface">{item.value}</span>
+            </div>
+          ))}
+        </div>
+        <Separator className="my-4 bg-outline-variant/10" />
+        <div className="flex items-center gap-2">
+          <Database className="h-4 w-4 text-outline" />
+          <span className="font-mono text-[11px] text-outline">
+            Currently using local Zustand stores. Connect Convex for real-time sync.
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

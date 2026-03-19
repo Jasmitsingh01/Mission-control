@@ -1,9 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Activity, Trash2, Pause, Play } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { useActivityStore } from '@/stores/activityStore'
 import { ActivityItem } from './ActivityItem'
 import { ActivityFilters } from './ActivityFilters'
@@ -31,95 +28,88 @@ export function ActivityPage() {
   }), [events])
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Activity Feed</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Activity Feed</h1>
+          <p className="text-sm text-on-surface-variant mt-2">
             Real-time log of all agent actions, task updates, and system events
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            className="flex items-center gap-2 h-8 px-4 rounded-lg bg-surface-container-highest text-on-surface-variant font-mono text-[10px] uppercase tracking-widest font-bold border border-outline-variant/10 hover:text-on-surface transition-colors"
             onClick={() => setPaused(!paused)}
           >
-            {paused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
+            {paused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
             {paused ? 'Resume' : 'Pause'}
-          </Button>
-          <Button variant="outline" size="sm" onClick={clearEvents}>
-            <Trash2 className="h-4 w-4 mr-2" />
+          </button>
+          <button
+            className="flex items-center gap-2 h-8 px-4 rounded-lg bg-surface-container-highest text-on-surface-variant font-mono text-[10px] uppercase tracking-widest font-bold border border-outline-variant/10 hover:text-on-surface transition-colors"
+            onClick={clearEvents}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
             Clear
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Total Events', value: stats.total, color: 'text-foreground' },
-          { label: 'Errors', value: stats.errors, color: 'text-red-400' },
-          { label: 'Warnings', value: stats.warnings, color: 'text-yellow-400' },
-          { label: 'Success', value: stats.success, color: 'text-green-400' },
+          { label: 'Total Events', value: stats.total, color: 'text-on-surface' },
+          { label: 'Errors', value: stats.errors, color: 'text-error' },
+          { label: 'Warnings', value: stats.warnings, color: 'text-tertiary' },
+          { label: 'Success', value: stats.success, color: 'text-secondary' },
         ].map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            </CardContent>
-          </Card>
+          <div key={stat.label} className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">{stat.label}</p>
+            <p className={cn('text-2xl font-bold mt-1 font-[\'JetBrains_Mono\']', stat.color)}>{stat.value}</p>
+          </div>
         ))}
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <ActivityFilters
-            severity={severityFilter}
-            type={typeFilter}
-            onSeverityChange={setSeverityFilter}
-            onTypeChange={setTypeFilter}
-          />
-        </CardContent>
-      </Card>
+      <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+        <ActivityFilters
+          severity={severityFilter}
+          type={typeFilter}
+          onSeverityChange={setSeverityFilter}
+          onTypeChange={setTypeFilter}
+        />
+      </div>
 
       {/* Feed */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Live Feed
-              {!paused && (
-                <span className="flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
-              )}
-            </CardTitle>
-            <Badge variant="secondary" className="text-xs">
-              {filteredEvents.length} events
-            </Badge>
-          </div>
-        </CardHeader>
-        <Separator />
-        <div>
-          <div className="divide-y divide-border/50">
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map((event) => (
-                <ActivityItem key={event.id} event={event} />
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <Activity className="h-8 w-8 mb-2 opacity-50" />
-                <p className="text-sm">No events match your filters</p>
-              </div>
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-outline-variant/10">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-sm text-on-surface">Live Feed</span>
+            {!paused && (
+              <span className="relative flex h-2 w-2 ml-1">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
+              </span>
             )}
           </div>
+          <span className="font-mono text-[10px] bg-surface-container-highest text-primary px-2 py-0.5 rounded-full border border-primary/20">
+            {filteredEvents.length} events
+          </span>
         </div>
-      </Card>
+        <div className="divide-y divide-outline-variant/10">
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => (
+              <ActivityItem key={event.id} event={event} />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-on-surface-variant">
+              <Activity className="h-8 w-8 mb-2 opacity-50" />
+              <p className="text-sm">No events match your filters</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

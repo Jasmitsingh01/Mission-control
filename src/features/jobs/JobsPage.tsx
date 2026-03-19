@@ -13,8 +13,6 @@ import {
   Bot,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,10 +28,10 @@ import { PRIORITY_COLORS } from '@/lib/constants'
 import type { JobStatus } from '@/stores/jobStore'
 
 const statusConfig: Record<JobStatus, { color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
-  scheduled: { color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Clock },
-  running: { color: 'text-green-400', bg: 'bg-green-500/10', icon: Play },
-  paused: { color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: Pause },
-  failed: { color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle },
+  scheduled: { color: 'text-primary', bg: 'bg-primary/10', icon: Clock },
+  running: { color: 'text-secondary', bg: 'bg-secondary/10', icon: Play },
+  paused: { color: 'text-tertiary', bg: 'bg-tertiary/10', icon: Pause },
+  failed: { color: 'text-error', bg: 'bg-error-container/20', icon: XCircle },
 }
 
 function formatRelativeTime(ts: number): string {
@@ -69,34 +67,35 @@ export function JobsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Scheduled Jobs</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Scheduled Jobs</h1>
+          <p className="text-sm text-on-surface-variant mt-2">
             Recurring automated tasks with priority queuing
           </p>
         </div>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <button
+          className="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-on-primary font-mono text-[10px] uppercase tracking-widest font-bold transition-colors hover:bg-primary/90"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
           New Job
-        </Button>
+        </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Total Jobs', value: stats.total, color: '' },
-          { label: 'Active', value: stats.active, color: 'text-blue-400' },
-          { label: 'Running Now', value: stats.running, color: 'text-green-400' },
-          { label: 'Failed', value: stats.failed, color: 'text-red-400' },
+          { label: 'Total Jobs', value: stats.total, color: 'text-on-surface' },
+          { label: 'Active', value: stats.active, color: 'text-primary' },
+          { label: 'Running Now', value: stats.running, color: 'text-secondary' },
+          { label: 'Failed', value: stats.failed, color: 'text-error' },
         ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground">{s.label}</p>
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            </CardContent>
-          </Card>
+          <div key={s.label} className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">{s.label}</p>
+            <p className={cn('text-2xl font-bold mt-1 font-[\'JetBrains_Mono\']', s.color)}>{s.value}</p>
+          </div>
         ))}
       </div>
 
@@ -106,86 +105,98 @@ export function JobsPage() {
           const sc = statusConfig[job.status]
           const StatusIcon = sc.icon
           return (
-            <Card key={job.id} className={cn(!job.enabled && 'opacity-60')}>
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-start gap-4">
-                  {/* Status icon */}
-                  <div className={cn('rounded-lg p-2 mt-0.5 shrink-0', sc.bg)}>
-                    <StatusIcon className={cn('h-4 w-4', sc.color)} />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-sm">{job.name}</h3>
-                      <Badge variant="secondary" className={cn('text-[10px]', sc.bg, sc.color)}>
-                        {job.status}
-                      </Badge>
-                      <Badge variant="outline" className={cn('text-[10px] capitalize', PRIORITY_COLORS[job.priority])}>
-                        {job.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{job.description}</p>
-
-                    {/* Error */}
-                    {job.errorMessage && (
-                      <div className="rounded bg-red-500/10 border border-red-500/20 px-2 py-1 mb-2">
-                        <p className="text-[11px] text-red-400 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3 shrink-0" />
-                          {job.errorMessage}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Meta row */}
-                    <div className="flex items-center gap-4 text-[11px] text-muted-foreground flex-wrap">
-                      <span className="font-mono bg-muted/50 rounded px-1.5 py-0.5">{job.cronExpression}</span>
-                      <span>{job.cronHuman}</span>
-                      {job.targetAgentId && (
-                        <span className="flex items-center gap-1">
-                          <Bot className="h-3 w-3" />
-                          {getAgentName(job.targetAgentId)}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3 text-green-400" />
-                        {job.successCount}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <XCircle className="h-3 w-3 text-red-400" />
-                        {job.failCount}
-                      </span>
-                      {job.lastRunAt && <span>Last: {formatRelativeTime(job.lastRunAt)}</span>}
-                      <span>Next: {formatRelativeTime(job.nextRunAt)}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => toggleJob(job.id)}>
-                        {job.enabled ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-                        {job.enabled ? 'Disable' : 'Enable'}
-                      </DropdownMenuItem>
-                      {job.status === 'failed' && (
-                        <DropdownMenuItem onClick={() => toggleJob(job.id)}>
-                          <RotateCcw className="h-4 w-4 mr-2" /> Retry
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onClick={() => deleteJob(job.id)}>
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            <div
+              key={job.id}
+              className={cn(
+                'bg-surface-container-low rounded-xl border border-outline-variant/10 p-5 transition-colors',
+                !job.enabled && 'opacity-60',
+                job.priority === 'critical' && 'border-l-2 border-l-error',
+                job.priority === 'high' && 'border-l-2 border-l-tertiary',
+              )}
+            >
+              <div className="flex items-start gap-4">
+                {/* Status icon */}
+                <div className={cn('rounded-lg p-2 mt-0.5 shrink-0', sc.bg)}>
+                  <StatusIcon className={cn('h-4 w-4', sc.color)} />
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-sm text-on-surface">{job.name}</h3>
+                    <span className={cn(
+                      "font-mono text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full",
+                      sc.bg, sc.color
+                    )}>
+                      {job.status}
+                    </span>
+                    <span className={cn(
+                      "font-mono text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full capitalize border",
+                      PRIORITY_COLORS[job.priority]
+                    )}>
+                      {job.priority}
+                    </span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mb-2 line-clamp-1">{job.description}</p>
+
+                  {/* Error */}
+                  {job.errorMessage && (
+                    <div className="rounded-lg bg-error-container/20 border border-error/20 px-3 py-1.5 mb-2">
+                      <p className="font-mono text-[11px] text-error flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
+                        {job.errorMessage}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Meta row */}
+                  <div className="flex items-center gap-4 font-mono text-[10px] text-on-surface-variant flex-wrap">
+                    <span className="bg-surface-container-lowest rounded-md px-2 py-0.5 text-primary border border-outline-variant/10">{job.cronExpression}</span>
+                    <span className="text-outline">{job.cronHuman}</span>
+                    {job.targetAgentId && (
+                      <span className="flex items-center gap-1">
+                        <Bot className="h-3 w-3" />
+                        {getAgentName(job.targetAgentId)}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1 text-secondary">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {job.successCount}
+                    </span>
+                    <span className="flex items-center gap-1 text-error">
+                      <XCircle className="h-3 w-3" />
+                      {job.failCount}
+                    </span>
+                    {job.lastRunAt && <span className="text-outline">Last: {formatRelativeTime(job.lastRunAt)}</span>}
+                    <span className="text-outline">Next: {formatRelativeTime(job.nextRunAt)}</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-on-surface">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => toggleJob(job.id)}>
+                      {job.enabled ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                      {job.enabled ? 'Disable' : 'Enable'}
+                    </DropdownMenuItem>
+                    {job.status === 'failed' && (
+                      <DropdownMenuItem onClick={() => toggleJob(job.id)}>
+                        <RotateCcw className="h-4 w-4 mr-2" /> Retry
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-error" onClick={() => deleteJob(job.id)}>
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
           )
         })}
       </div>

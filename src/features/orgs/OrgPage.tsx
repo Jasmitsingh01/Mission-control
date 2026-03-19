@@ -8,9 +8,7 @@ import {
   Check,
   Settings,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -24,16 +22,16 @@ import { useOrgStore } from '@/stores/orgStore'
 import type { OrgMember } from '@/stores/orgStore'
 
 const roleConfig: Record<OrgMember['role'], { icon: React.ComponentType<{ className?: string }>; color: string; label: string }> = {
-  owner: { icon: Crown, color: 'text-yellow-400', label: 'Owner' },
-  admin: { icon: Shield, color: 'text-blue-400', label: 'Admin' },
-  member: { icon: User, color: 'text-foreground', label: 'Member' },
-  viewer: { icon: Eye, color: 'text-muted-foreground', label: 'Viewer' },
+  owner: { icon: Crown, color: 'text-tertiary', label: 'Owner' },
+  admin: { icon: Shield, color: 'text-primary', label: 'Admin' },
+  member: { icon: User, color: 'text-on-surface', label: 'Member' },
+  viewer: { icon: Eye, color: 'text-outline', label: 'Viewer' },
 }
 
 const planColors: Record<string, string> = {
-  free: 'bg-muted text-muted-foreground',
-  pro: 'bg-blue-500/20 text-blue-400',
-  enterprise: 'bg-purple-500/20 text-purple-400',
+  free: 'bg-surface-container-highest text-outline',
+  pro: 'bg-primary/10 text-primary border border-primary/20',
+  enterprise: 'bg-purple-500/10 text-purple-400 border border-purple-400/20',
 }
 
 export function OrgPage() {
@@ -41,142 +39,148 @@ export function OrgPage() {
   const currentOrg = orgs.find((o) => o.id === currentOrgId)!
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 pb-8 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Organization</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Organization</h1>
+        <p className="text-sm text-on-surface-variant mt-2">
           Manage workspaces, members, and billing
         </p>
       </div>
 
       {/* Org Switcher */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Workspaces</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {orgs.map((org) => (
-              <button
-                key={org.id}
-                onClick={() => setCurrentOrg(org.id)}
-                className={cn(
-                  'w-full flex items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors',
-                  org.id === currentOrgId
-                    ? 'bg-primary/10 border border-primary/30'
-                    : 'hover:bg-muted/50 border border-transparent'
-                )}
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-sm shrink-0">
-                  {org.name.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{org.name}</span>
-                    <Badge variant="secondary" className={cn('text-[10px] capitalize', planColors[org.plan])}>
-                      {org.plan}
-                    </Badge>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {org.memberCount} members · /{org.slug}
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">Workspaces</span>
+        <div className="space-y-2 mt-4">
+          {orgs.map((org) => (
+            <button
+              key={org.id}
+              onClick={() => setCurrentOrg(org.id)}
+              className={cn(
+                'w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors',
+                org.id === currentOrgId
+                  ? 'bg-primary/10 border border-primary/30'
+                  : 'hover:bg-surface-container/50 border border-outline-variant/10'
+              )}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-sm shrink-0">
+                {org.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm text-on-surface">{org.name}</span>
+                  <span className={cn(
+                    "font-mono text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full capitalize",
+                    planColors[org.plan]
+                  )}>
+                    {org.plan}
                   </span>
                 </div>
-                {org.id === currentOrgId && (
-                  <Check className="h-4 w-4 text-primary shrink-0" />
-                )}
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                <span className="font-mono text-[11px] text-outline">
+                  {org.memberCount} members · /{org.slug}
+                </span>
+              </div>
+              {org.id === currentOrgId && (
+                <Check className="h-4 w-4 text-primary shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Current Org Details */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              {currentOrg.name}
-            </CardTitle>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-sm text-on-surface">{currentOrg.name}</span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Plan</p>
-              <p className="text-sm font-medium capitalize">{currentOrg.plan}</p>
+          <button className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest font-bold px-4 py-2 rounded-lg bg-surface-container-highest text-on-surface-variant border border-outline-variant/10 hover:text-on-surface transition-colors">
+            <Settings className="h-3.5 w-3.5" />
+            Settings
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'Plan', value: currentOrg.plan, capitalize: true },
+            { label: 'Slug', value: `/${currentOrg.slug}`, mono: true },
+            { label: 'Created', value: new Date(currentOrg.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+          ].map((item) => (
+            <div key={item.label}>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">{item.label}</p>
+              <p className={cn(
+                'text-sm text-on-surface mt-1',
+                item.mono && "font-mono",
+                item.capitalize && 'capitalize'
+              )}>{item.value}</p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Slug</p>
-              <p className="text-sm font-mono">/{currentOrg.slug}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Created</p>
-              <p className="text-sm">{new Date(currentOrg.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </div>
 
       {/* Members */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Members ({members.length})</CardTitle>
-            <Button size="sm">Invite Member</Button>
+      <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm text-on-surface">Members</span>
+            <span className="font-mono text-[10px] bg-surface-container-highest text-primary px-2 py-0.5 rounded-full border border-primary/20">
+              {members.length}
+            </span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            {members.map((member) => {
-              const role = roleConfig[member.role]
-              const RoleIcon = role.icon
-              return (
-                <div key={member.id} className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/30 transition-colors">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                      {member.avatarInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{member.name}</p>
-                    <p className="text-xs text-muted-foreground">{member.email}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-[11px] gap-1">
-                    <RoleIcon className={cn('h-3 w-3', role.color)} />
-                    {role.label}
-                  </Badge>
-                  {member.role !== 'owner' && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs">
-                          Change
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {(['admin', 'member', 'viewer'] as const).map((r) => (
-                          <DropdownMenuItem key={r} onClick={() => updateMemberRole(member.id, r)}>
-                            {roleConfig[r].label}
-                          </DropdownMenuItem>
-                        ))}
-                        <Separator className="my-1" />
-                        <DropdownMenuItem className="text-destructive" onClick={() => removeMember(member.id)}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+          <button className="flex items-center gap-2 h-8 px-4 rounded-lg bg-primary text-on-primary font-mono text-[10px] uppercase tracking-widest font-bold transition-colors hover:bg-primary/90">
+            Invite Member
+          </button>
+        </div>
+        <div className="space-y-1">
+          {members.map((member) => {
+            const role = roleConfig[member.role]
+            const RoleIcon = role.icon
+            return (
+              <div key={member.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-container/50 transition-colors">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                    {member.avatarInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-on-surface">{member.name}</p>
+                  <p className="font-mono text-[11px] text-outline">{member.email}</p>
                 </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                <span className={cn(
+                  "font-mono text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-full flex items-center gap-1",
+                  member.role === 'owner' && 'bg-tertiary/10 text-tertiary border border-tertiary/20',
+                  member.role === 'admin' && 'bg-primary/10 text-primary border border-primary/20',
+                  member.role === 'member' && 'bg-surface-container-highest text-on-surface-variant',
+                  member.role === 'viewer' && 'bg-surface-container-highest text-outline',
+                )}>
+                  <RoleIcon className={cn('h-3 w-3', role.color)} />
+                  {role.label}
+                </span>
+                {member.role !== 'owner' && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant hover:text-on-surface">
+                        Change
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {(['admin', 'member', 'viewer'] as const).map((r) => (
+                        <DropdownMenuItem key={r} onClick={() => updateMemberRole(member.id, r)}>
+                          {roleConfig[r].label}
+                        </DropdownMenuItem>
+                      ))}
+                      <Separator className="my-1 bg-outline-variant/10" />
+                      <DropdownMenuItem className="text-error" onClick={() => removeMember(member.id)}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

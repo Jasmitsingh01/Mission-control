@@ -5,10 +5,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import {
   Trash2,
   Save,
@@ -19,9 +16,12 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
+  RotateCcw,
+  Square,
+  CheckCircle2,
 } from 'lucide-react'
 import { useTaskStore } from '@/stores/taskStore'
-import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LEVELS } from '@/lib/constants'
+import { STATUS_LABELS, PRIORITY_LEVELS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/stores/taskStore'
 import type { TaskStatus, Priority } from '@/lib/constants'
@@ -31,6 +31,13 @@ const priorityIcons: Record<Priority, React.ComponentType<{ className?: string }
   high: ArrowUp,
   medium: Minus,
   low: ArrowDown,
+}
+
+const priorityColors: Record<Priority, string> = {
+  critical: 'bg-error/20 text-error border-error/30',
+  high: 'bg-tertiary/20 text-tertiary border-tertiary/30',
+  medium: 'bg-primary/20 text-primary border-primary/30',
+  low: 'bg-surface-container-highest text-on-surface-variant border-outline-variant/20',
 }
 
 interface TaskDetailPanelProps {
@@ -107,47 +114,49 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="text-left pr-8">Task Details</SheetTitle>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-surface-container-low border-l border-outline-variant/20 p-0">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b border-outline-variant/10">
+          <SheetTitle className="text-left pr-8 font-mono text-sm uppercase tracking-widest text-on-surface-variant">
+            Task Details
+          </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-5 mt-6">
+        <div className="space-y-5 px-6 py-6">
           {/* Title */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+            <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
               Title
             </label>
             <Input
               value={title}
               onChange={(e) => { setTitle(e.target.value); markChanged() }}
-              className="text-base font-medium"
+              className="text-base font-semibold text-on-surface bg-surface-container-lowest border-outline-variant/20 focus:border-primary/50 focus:ring-primary/20"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+            <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => { setDescription(e.target.value); markChanged() }}
               rows={4}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+              className="flex w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 resize-none"
             />
           </div>
 
           {/* Status + Priority */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
                 Status
               </label>
               <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value as TaskStatus); markChanged() }}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-1 text-sm text-on-surface focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
               >
                 {Object.entries(STATUS_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
@@ -155,24 +164,27 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
                 Priority
               </label>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 {PRIORITY_LEVELS.map((p) => {
                   const Icon = priorityIcons[p]
                   return (
-                    <Button
+                    <button
                       key={p}
                       type="button"
-                      variant={priority === p ? 'default' : 'outline'}
-                      size="sm"
-                      className="flex-1 h-9 text-xs capitalize"
+                      className={cn(
+                        "flex-1 h-9 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest flex items-center justify-center gap-1 border transition-all",
+                        priority === p
+                          ? priorityColors[p]
+                          : 'border-outline-variant/10 bg-surface-container text-outline hover:text-on-surface-variant hover:border-outline-variant/30'
+                      )}
                       onClick={() => { setPriority(p); markChanged() }}
                     >
-                      <Icon className="h-3 w-3 mr-1" />
+                      <Icon className="h-3 w-3" />
                       {p}
-                    </Button>
+                    </button>
                   )
                 })}
               </div>
@@ -181,7 +193,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
 
           {/* Labels */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+            <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
               Labels
             </label>
             <div className="flex gap-2 mb-2">
@@ -195,68 +207,133 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
                     addLabel()
                   }
                 }}
-                className="flex-1"
+                className="flex-1 bg-surface-container-lowest border-outline-variant/20 text-sm"
               />
-              <Button type="button" variant="secondary" size="sm" onClick={addLabel}>
+              <button
+                type="button"
+                onClick={addLabel}
+                className="font-mono uppercase tracking-widest text-[10px] font-bold px-3 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-colors"
+              >
                 Add
-              </Button>
+              </button>
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {labels.map((label) => (
-                <Badge key={label} variant="secondary" className="gap-1 pr-1">
+                <span key={label} className="inline-flex items-center gap-1 font-mono text-[10px] font-bold bg-primary-container/20 text-primary px-2 py-0.5 rounded">
                   {label}
-                  <button onClick={() => removeLabel(label)}>
+                  <button onClick={() => removeLabel(label)} className="hover:text-error transition-colors">
                     <X className="h-3 w-3" />
                   </button>
-                </Badge>
+                </span>
               ))}
               {labels.length === 0 && (
-                <span className="text-xs text-muted-foreground">No labels</span>
+                <span className="font-mono text-[10px] text-outline">No labels</span>
               )}
             </div>
           </div>
 
-          <Separator />
-
           {/* Metadata */}
-          <div className="space-y-2 text-xs text-muted-foreground">
+          <div className="bg-surface-container p-3 rounded-lg space-y-2.5">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline">Metadata</span>
             {task.assignedAgentId && (
-              <div className="flex items-center gap-2">
-                <Bot className="h-3.5 w-3.5" />
-                <span>Assigned to Agent <code className="text-primary/70">{task.assignedAgentId}</code></span>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+                  <Bot className="h-3 w-3 text-secondary" />
+                  Assigned Agent
+                </span>
+                <code className="font-mono text-[10px] text-primary">{task.assignedAgentId}</code>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Created {createdDate}</span>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+                <Clock className="h-3 w-3 text-outline" />
+                Created
+              </span>
+              <span className="font-mono text-[10px] text-on-surface-variant">{createdDate}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Updated {updatedDate}</span>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+                <Clock className="h-3 w-3 text-outline" />
+                Updated
+              </span>
+              <span className="font-mono text-[10px] text-on-surface-variant">{updatedDate}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className={cn('text-[10px]', STATUS_COLORS[task.status])}>
-                {STATUS_LABELS[task.status]}
-              </Badge>
-              <span className="text-muted-foreground">ID: {task.id}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-on-surface-variant">ID</span>
+              <code className="font-mono text-[10px] text-outline">{task.id}</code>
             </div>
           </div>
 
-          <Separator />
+          {/* Live Activity Log placeholder */}
+          <div className="bg-surface-container-lowest rounded-xl p-4">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline block mb-2">Activity Log</span>
+            <div className="font-mono text-[11px] text-on-surface-variant space-y-1">
+              <p className="text-outline">Task created {createdDate}</p>
+              {task.assignedAgentId && (
+                <p className="text-secondary">Assigned to agent <span className="text-primary">{task.assignedAgentId}</span></p>
+              )}
+              <p className="text-outline">Last updated {updatedDate}</p>
+            </div>
+          </div>
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <Button
+          {/* Action buttons - 3-column grid */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
               onClick={handleSave}
               disabled={!hasChanges}
-              className="flex-1"
+              className={cn(
+                "font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all",
+                hasChanges
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                  : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
+              )}
             >
-              <Save className="h-4 w-4 mr-2" />
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Approve
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges}
+              className={cn(
+                "font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all",
+                hasChanges
+                  ? 'bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30'
+                  : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
+              )}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Retry
+            </button>
+            <button
+              onClick={handleDelete}
+              className="font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 bg-error/20 text-error border border-error/30 hover:bg-error/30 transition-all"
+            >
+              <Square className="h-3.5 w-3.5" />
+              Stop
+            </button>
+          </div>
+
+          {/* Secondary actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges}
+              className={cn(
+                "flex-1 font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all",
+                hasChanges
+                  ? 'synthetic-gradient text-white hover:opacity-90'
+                  : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
+              )}
+            >
+              <Save className="h-3.5 w-3.5" />
               Save Changes
-            </Button>
-            <Button variant="destructive" size="icon" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            </button>
+            <button
+              onClick={handleDelete}
+              className="font-mono uppercase tracking-widest text-[10px] font-bold px-3 py-2.5 rounded-lg bg-error-container/20 text-error border border-error/30 hover:bg-error-container/30 transition-all"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       </SheetContent>
