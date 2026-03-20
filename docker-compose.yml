@@ -1,8 +1,45 @@
 services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - agentforge
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/agentforge
+      - CORS_ORIGINS=http://localhost:3000,${APP_URL:-http://localhost:3000}
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+    networks:
+      - agentforge
+
   frontend:
     build: .
+    restart: unless-stopped
     ports:
       - "3000:80"
     environment:
-      - VITE_CONVEX_URL=${VITE_CONVEX_URL}
-    restart: unless-stopped
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:4000/api}
+      - VITE_CONVEX_URL=${VITE_CONVEX_URL:-}
+    depends_on:
+      - server
+    networks:
+      - agentforge
+
+volumes:
+  mongo_data:
+
+networks:
+  agentforge:
+    driver: bridge
