@@ -5,5 +5,5 @@ export async function chatCompletion(
   userMessage: string,
 ): Promise<string> {
   const data = await aiApi.chat(systemPrompt, userMessage)
-  return data.content
+  return data.text || data.content || ''
 }

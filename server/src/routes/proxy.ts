@@ -6,8 +6,14 @@ import ApiUsage from '../models/ApiUsage';
 const router = Router();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_DEFAULT_KEY = process.env.OPENROUTER_API_KEY || '';
-const OPENROUTER_DEFAULT_MODEL = process.env.OPENROUTER_DEFAULT_MODEL || 'google/gemini-2.0-flash-001';
+
+function getOpenRouterKey(): string {
+  return process.env.OPENROUTER_API_KEY || '';
+}
+
+function getOpenRouterModel(): string {
+  return process.env.getOpenRouterModel() || 'google/gemini-2.0-flash-001';
+}
 
 // All proxy routes require authentication
 router.use(authenticate);
@@ -29,13 +35,13 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const apiKey = user.settings?.openrouterApiKey || OPENROUTER_DEFAULT_KEY;
+    const apiKey = user.settings?.openrouterApiKey || getOpenRouterKey();
     if (!apiKey) {
       res.status(400).json({ error: 'No OpenRouter API key configured. Set one in your settings or contact an admin.' });
       return;
     }
 
-    const selectedModel = model || user.settings?.preferredModel || OPENROUTER_DEFAULT_MODEL;
+    const selectedModel = model || user.settings?.preferredModel || getOpenRouterModel();
     const selectedTemperature = temperature ?? user.settings?.temperature ?? 0.4;
     const selectedMaxTokens = maxTokens ?? user.settings?.maxTokens ?? 4096;
 

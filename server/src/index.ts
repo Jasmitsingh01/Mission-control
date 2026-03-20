@@ -11,6 +11,9 @@ import proxyRoutes from './routes/proxy';
 import missionRoutes from './routes/missions';
 import orgRoutes from './routes/orgs';
 import executeRoutes from './routes/execute';
+import billingRoutes from './routes/billing';
+import adminRoutes from './routes/admin';
+import passwordResetRoutes from './routes/passwordReset';
 import { setupWebSocket } from './services/wsHandler';
 
 const app = express();
@@ -31,13 +34,19 @@ app.use(
 // JSON parsing
 app.use(express.json({ limit: '10mb' }));
 
+// Stripe webhook needs raw body — mount before express.json()
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordResetRoutes);
 app.use('/api/users', authRoutes);
 app.use('/api/proxy', proxyRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/orgs', orgRoutes);
 app.use('/api/executions', executeRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', async (_req, res) => {

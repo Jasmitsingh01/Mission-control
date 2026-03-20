@@ -143,17 +143,14 @@ export function MissionLauncherPage() {
 
         // Trigger real Claude Code execution
         connectWebSocket()
-        try {
-          const taskSummary = plan.tasks.map((t) => `- ${t.title}: ${t.description}`).join('\n')
-          const execId = await startExecution({
-            taskTitle: plan.missionName,
-            prompt: `You are executing the mission "${plan.missionName}".\n\nMission description: ${plan.summary}\n\nTasks to complete:\n${taskSummary}\n\nPlease execute these tasks in order of priority. Start with the most critical tasks first.`,
-            systemPrompt: `You are an AI agent executing a mission called "${plan.missionName}". Complete all assigned tasks thoroughly.`,
-          })
-          setExecutionId(execId)
-        } catch (err) {
-          console.error('Failed to start Claude Code execution:', err)
-        }
+        const taskSummary = plan.tasks.map((t) => `- ${t.title}: ${t.description}`).join('\n')
+        startExecution({
+          taskTitle: plan.missionName,
+          prompt: `You are executing the mission "${plan.missionName}".\n\nMission description: ${plan.summary}\n\nTasks to complete:\n${taskSummary}\n\nPlease execute these tasks in order of priority. Start with the most critical tasks first.`,
+          systemPrompt: `You are an AI agent executing a mission called "${plan.missionName}". Complete all assigned tasks thoroughly.`,
+        })
+          .then((execId) => setExecutionId(execId))
+          .catch((err) => console.error('Failed to start execution:', err))
 
         setStep('done')
       }
