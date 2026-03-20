@@ -51,6 +51,10 @@ export const missionApi = {
   get: (id: string) => apiFetch(`/missions/${id}`),
   save: (mission: any) => apiFetch('/missions', { method: 'POST', body: JSON.stringify(mission) }),
   delete: (id: string) => apiFetch(`/missions/${id}`, { method: 'DELETE' }),
+  // Orchestrated launch — creates per-agent executions
+  launch: (plan: any) => apiFetch('/missions/launch', { method: 'POST', body: JSON.stringify({ plan }) }),
+  status: (missionId: string) => apiFetch(`/missions/status/${missionId}`),
+  active: () => apiFetch('/missions/active'),
 }
 
 // Organizations

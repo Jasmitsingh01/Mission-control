@@ -15,6 +15,7 @@ import { useTaskStore } from '@/stores/taskStore'
 import { useAgentStore } from '@/stores/agentStore'
 import { useActivityStore } from '@/stores/activityStore'
 import { useExecutionStore } from '@/stores/executionStore'
+import { missionApi } from '@/lib/api'
 import { generateMissionPlan, type MissionPlan } from './missionPlanner'
 import { MissionReview } from './MissionReview'
 import { ExecutionPanel } from '@/features/executions/ExecutionPanel'
@@ -36,8 +37,8 @@ export function MissionLauncherPage() {
   const addAgent = useAgentStore((s) => s.addAgent)
   const addEvent = useActivityStore((s) => s.addEvent)
 
-  const startExecution = useExecutionStore((s) => s.startExecution)
   const connectWebSocket = useExecutionStore((s) => s.connectWebSocket)
+  const fetchExecutions = useExecutionStore((s) => s.fetchExecutions)
 
   const [step, setStep] = useState<Step>('describe')
   const [missionName, setMissionName] = useState('')
@@ -45,7 +46,7 @@ export function MissionLauncherPage() {
   const [plan, setPlan] = useState<MissionPlan | null>(null)
   const [launchProgress, setLaunchProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [executionId, setExecutionId] = useState<string | null>(null)
+  const [agentExecutionIds, setAgentExecutionIds] = useState<{ name: string; id: string }[]>([])
 
   const handleGenerate = useCallback(async () => {
     if (!description.trim()) return
@@ -64,19 +65,14 @@ export function MissionLauncherPage() {
     }
   }, [description, missionName])
 
-  const handleLaunch = useCallback(() => {
+  const handleLaunch = useCallback(async () => {
     if (!plan) return
     setStep('launching')
-    setLaunchProgress(0)
+    setLaunchProgress(10)
 
-    // Animate launch: create agents first, then tasks
-    const totalSteps = plan.agents.length + plan.tasks.length
-    let currentStep = 0
-
-    // Create agents one by one
-    const createNext = () => {
-      if (currentStep < plan.agents.length) {
-        const agentData = plan.agents[currentStep]
+    try {
+      // 1. Create agents and tasks in local stores for UI display
+      for (const agentData of plan.agents) {
         addAgent({
           name: agentData.name,
           description: agentData.description,
@@ -93,23 +89,10 @@ export function MissionLauncherPage() {
           errorMessage: null,
           tasksAssigned: plan.tasks.filter((t) => t.assignedAgentRole === agentData.role).length,
         })
+      }
+      setLaunchProgress(30)
 
-        addEvent({
-          type: 'agent_spawned',
-          severity: 'success',
-          message: `${agentData.name} spawned for mission "${plan.missionName}"`,
-          actorType: 'system',
-          metadata: { mission: plan.missionName, role: agentData.role },
-        })
-
-        currentStep++
-        setLaunchProgress(Math.round((currentStep / totalSteps) * 100))
-        setTimeout(createNext, 300)
-      } else if (currentStep < totalSteps) {
-        // Create tasks
-        const taskIdx = currentStep - plan.agents.length
-        const taskData = plan.tasks[taskIdx]
-
+      for (const taskData of plan.tasks) {
         addTask({
           title: taskData.title,
           description: taskData.description,
@@ -119,45 +102,47 @@ export function MissionLauncherPage() {
           labels: [...taskData.labels, 'mission:' + plan.missionName.toLowerCase().replace(/\s+/g, '-')],
           dueDate: null,
         })
-
-        addEvent({
-          type: 'task_created',
-          severity: 'info',
-          message: `Task "${taskData.title}" created and assigned to ${plan.agents.find((a) => a.role === taskData.assignedAgentRole)?.name ?? 'system'}`,
-          actorType: 'system',
-          metadata: { mission: plan.missionName },
-        })
-
-        currentStep++
-        setLaunchProgress(Math.round((currentStep / totalSteps) * 100))
-        setTimeout(createNext, 200)
-      } else {
-        // Done
-        addEvent({
-          type: 'system',
-          severity: 'success',
-          message: `Mission "${plan.missionName}" launched: ${plan.agents.length} agents deployed, ${plan.tasks.length} tasks created`,
-          actorType: 'system',
-          metadata: { mission: plan.missionName },
-        })
-
-        // Trigger real Claude Code execution
-        connectWebSocket()
-        const taskSummary = plan.tasks.map((t) => `- ${t.title}: ${t.description}`).join('\n')
-        startExecution({
-          taskTitle: plan.missionName,
-          prompt: `You are executing the mission "${plan.missionName}".\n\nMission description: ${plan.summary}\n\nTasks to complete:\n${taskSummary}\n\nPlease execute these tasks in order of priority. Start with the most critical tasks first.`,
-          systemPrompt: `You are an AI agent executing a mission called "${plan.missionName}". Complete all assigned tasks thoroughly.`,
-        })
-          .then((execId) => setExecutionId(execId))
-          .catch((err) => console.error('Failed to start execution:', err))
-
-        setStep('done')
       }
-    }
+      setLaunchProgress(50)
 
-    setTimeout(createNext, 500)
-  }, [plan, addAgent, addTask, addEvent])
+      // 2. Launch mission via orchestrator — creates per-agent executions on OpenClaw
+      connectWebSocket()
+      const resp = await missionApi.launch(plan)
+      const mission = resp.mission
+
+      setLaunchProgress(80)
+
+      // 3. Collect all agent execution IDs for display
+      const execIds = (mission.agentExecutions || []).map((ae: any) => ({
+        name: ae.agentName,
+        id: ae.executionId,
+      }))
+      setAgentExecutionIds(execIds)
+
+      // 4. Subscribe to each agent's execution stream
+      for (const ae of execIds) {
+        useExecutionStore.getState().subscribeToExecution(ae.id)
+      }
+
+      // 5. Refresh executions list
+      fetchExecutions()
+
+      addEvent({
+        type: 'system',
+        severity: 'success',
+        message: `Mission "${plan.missionName}" launched: ${plan.agents.length} agents deployed on OpenClaw, ${plan.tasks.length} tasks assigned`,
+        actorType: 'system',
+        metadata: { mission: plan.missionName, missionId: mission.missionId },
+      })
+
+      setLaunchProgress(100)
+      setStep('done')
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to launch mission')
+      setStep('describe')
+    }
+  }, [plan, addAgent, addTask, addEvent, connectWebSocket, fetchExecutions])
 
   const stepIndex = step === 'describe' ? 0 : step === 'planning' ? 0 : step === 'review' ? 1 : step === 'launching' ? 2 : 2
 
@@ -396,9 +381,22 @@ export function MissionLauncherPage() {
             </div>
           </div>
 
-          {/* Live execution output */}
-          {executionId && (
-            <ExecutionPanel executionId={executionId} className="mt-4" />
+          {/* Per-agent execution panels */}
+          {agentExecutionIds.length > 0 && (
+            <div className="space-y-4 mt-4">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-outline font-bold">
+                Agent Execution (Live via OpenClaw)
+              </span>
+              {agentExecutionIds.map((ae) => (
+                <div key={ae.id}>
+                  <p className="text-xs font-semibold text-on-surface-variant mb-1 flex items-center gap-1.5">
+                    <Bot className="h-3.5 w-3.5 text-primary" />
+                    {ae.name}
+                  </p>
+                  <ExecutionPanel executionId={ae.id} />
+                </div>
+              ))}
+            </div>
           )}
 
           <div className="flex items-center justify-center gap-3">

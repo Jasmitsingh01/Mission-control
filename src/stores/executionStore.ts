@@ -1,6 +1,46 @@
 import { create } from 'zustand'
 import { executeApi } from '@/lib/api'
 
+/** Play a completion beep using Web Audio API */
+function playCompletionBeep() {
+  try {
+    const ctx = new AudioContext()
+    // Play two ascending tones for a pleasant "ding ding"
+    const playTone = (freq: number, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.3, startTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
+      osc.start(startTime)
+      osc.stop(startTime + duration)
+    }
+    playTone(830, ctx.currentTime, 0.15)        // E5
+    playTone(1046, ctx.currentTime + 0.15, 0.3) // C6
+    // Cleanup after sound finishes
+    setTimeout(() => ctx.close(), 1000)
+  } catch {
+    // AudioContext not available — ignore
+  }
+}
+
+/** Show browser push notification */
+function showBrowserNotification(title: string, body: string) {
+  if (!('Notification' in window)) return
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/favicon.ico' })
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then((perm) => {
+      if (perm === 'granted') {
+        new Notification(title, { body, icon: '/favicon.ico' })
+      }
+    })
+  }
+}
+
 export interface StreamEvent {
   executionId: string
   type: 'text' | 'tool_use' | 'tool_result' | 'error' | 'status' | 'complete'
@@ -163,6 +203,14 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data)
+
+        // Handle mission_complete — play beep sound + browser notification
+        if (msg.type === 'mission_complete') {
+          playCompletionBeep()
+          showBrowserNotification('Mission Complete', msg.content || 'Your mission has finished!')
+          // Also refresh executions list
+          get().fetchExecutions()
+        }
 
         // Handle stream events
         if (msg.executionId && msg.type) {

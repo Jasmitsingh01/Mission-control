@@ -2,6 +2,7 @@ import { Server as HttpServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import jwt from 'jsonwebtoken';
 import { executor, StreamEvent } from './claudeExecutor';
+import { orchestrator, MissionStreamEvent } from './missionOrchestrator';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'agentforge_jwt_secret_change_in_production';
 
@@ -127,6 +128,26 @@ export function setupWebSocket(server: HttpServer): WebSocketServer {
       setTimeout(() => {
         executionSubscribers.delete(event.executionId);
       }, 60_000); // Keep for 1 min after completion
+    }
+  });
+
+  // Listen to mission-level events and broadcast to all org subscribers
+  orchestrator.on('mission_stream', (event: MissionStreamEvent) => {
+    // Broadcast mission_complete to all connected clients in the org
+    if (event.type === 'mission_complete') {
+      const payload = JSON.stringify({
+        type: 'mission_complete',
+        missionId: event.missionId,
+        content: event.content,
+        timestamp: event.timestamp,
+      });
+
+      // Send to all connected clients (they'll filter by relevance)
+      wss.clients.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(payload);
+        }
+      });
     }
   });
 

@@ -14,6 +14,7 @@ import executeRoutes from './routes/execute';
 import billingRoutes from './routes/billing';
 import adminRoutes from './routes/admin';
 import passwordResetRoutes from './routes/passwordReset';
+import missionLaunchRoutes from './routes/missionLaunch';
 import { setupWebSocket } from './services/wsHandler';
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/auth', passwordResetRoutes);
 app.use('/api/users', authRoutes);
 app.use('/api/proxy', proxyRoutes);
+app.use('/api/missions', missionLaunchRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/orgs', orgRoutes);
 app.use('/api/executions', executeRoutes);
