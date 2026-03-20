@@ -14,8 +14,10 @@ import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/stores/taskStore'
 import { useAgentStore } from '@/stores/agentStore'
 import { useActivityStore } from '@/stores/activityStore'
+import { useExecutionStore } from '@/stores/executionStore'
 import { generateMissionPlan, type MissionPlan } from './missionPlanner'
 import { MissionReview } from './MissionReview'
+import { ExecutionPanel } from '@/features/executions/ExecutionPanel'
 
 type Step = 'describe' | 'planning' | 'review' | 'launching' | 'done'
 
@@ -34,12 +36,16 @@ export function MissionLauncherPage() {
   const addAgent = useAgentStore((s) => s.addAgent)
   const addEvent = useActivityStore((s) => s.addEvent)
 
+  const startExecution = useExecutionStore((s) => s.startExecution)
+  const connectWebSocket = useExecutionStore((s) => s.connectWebSocket)
+
   const [step, setStep] = useState<Step>('describe')
   const [missionName, setMissionName] = useState('')
   const [description, setDescription] = useState('')
   const [plan, setPlan] = useState<MissionPlan | null>(null)
   const [launchProgress, setLaunchProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [executionId, setExecutionId] = useState<string | null>(null)
 
   const handleGenerate = useCallback(async () => {
     if (!description.trim()) return
@@ -134,6 +140,21 @@ export function MissionLauncherPage() {
           actorType: 'system',
           metadata: { mission: plan.missionName },
         })
+
+        // Trigger real Claude Code execution
+        connectWebSocket()
+        try {
+          const taskSummary = plan.tasks.map((t) => `- ${t.title}: ${t.description}`).join('\n')
+          const execId = await startExecution({
+            taskTitle: plan.missionName,
+            prompt: `You are executing the mission "${plan.missionName}".\n\nMission description: ${plan.summary}\n\nTasks to complete:\n${taskSummary}\n\nPlease execute these tasks in order of priority. Start with the most critical tasks first.`,
+            systemPrompt: `You are an AI agent executing a mission called "${plan.missionName}". Complete all assigned tasks thoroughly.`,
+          })
+          setExecutionId(execId)
+        } catch (err) {
+          console.error('Failed to start Claude Code execution:', err)
+        }
+
         setStep('done')
       }
     }
@@ -377,6 +398,11 @@ export function MissionLauncherPage() {
               </div>
             </div>
           </div>
+
+          {/* Live execution output */}
+          {executionId && (
+            <ExecutionPanel executionId={executionId} className="mt-4" />
+          )}
 
           <div className="flex items-center justify-center gap-3">
             <button

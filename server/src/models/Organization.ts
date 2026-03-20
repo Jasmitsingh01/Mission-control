@@ -61,7 +61,6 @@ const organizationSchema = new Schema<IOrganization>(
   { timestamps: true }
 );
 
-organizationSchema.index({ slug: 1 }, { unique: true });
 organizationSchema.index({ ownerId: 1, createdAt: -1 });
 
 // Auto-set plan limits when plan changes

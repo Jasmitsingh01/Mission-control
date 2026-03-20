@@ -11,6 +11,7 @@ import {
   Rocket,
   Plus,
   Store,
+  Terminal,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/dashboard/mission', icon: Rocket, label: 'My Teams' },
   { to: '/dashboard/agents', icon: Bot, label: 'Active Agents' },
   { to: '/dashboard/board', icon: KanbanSquare, label: 'Task Queue' },
+  { to: '/dashboard/executions', icon: Terminal, label: 'Executions' },
   { to: '/dashboard/skills', icon: Store, label: 'Skills Store' },
   { to: '/dashboard/memory', icon: Brain, label: 'Memory Browser' },
   { to: '/dashboard/jobs', icon: Clock, label: 'Schedules' },

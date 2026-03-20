@@ -29,6 +29,7 @@ import { SkillsPage } from '@/features/skills/SkillsPage'
 import { OrgPage } from '@/features/orgs/OrgPage'
 import { AcceptInvitePage } from '@/features/orgs/AcceptInvitePage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { ExecutionsPage } from '@/features/executions/ExecutionsPage'
 
 export default function App() {
   return (
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="memory" element={<MemoryPage />} />
             <Route path="skills" element={<SkillsPage />} />
             <Route path="org" element={<OrgPage />} />
+            <Route path="executions" element={<ExecutionsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>

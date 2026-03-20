@@ -45,7 +45,6 @@ const invitationSchema = new Schema<IInvitation>(
 );
 
 invitationSchema.index({ orgId: 1, email: 1 });
-invitationSchema.index({ token: 1 }, { unique: true });
 invitationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL auto-cleanup
 
 const Invitation: Model<IInvitation> = mongoose.model<IInvitation>('Invitation', invitationSchema);

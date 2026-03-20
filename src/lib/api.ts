@@ -94,3 +94,25 @@ export const orgApi = {
       body: JSON.stringify({ newOwnerId }),
     }),
 }
+
+// Executions (Claude Code)
+export const executeApi = {
+  start: (data: {
+    taskTitle: string
+    prompt: string
+    model?: string
+    allowedTools?: string[]
+    workingDirectory?: string
+    maxTurns?: number
+    systemPrompt?: string
+  }) => apiFetch('/executions', { method: 'POST', body: JSON.stringify(data) }),
+
+  list: (page = 1, status?: string) =>
+    apiFetch(`/executions?page=${page}${status ? `&status=${status}` : ''}`),
+
+  get: (id: string) => apiFetch(`/executions/${id}`),
+
+  abort: (id: string) => apiFetch(`/executions/${id}/abort`, { method: 'POST' }),
+
+  activeCount: () => apiFetch('/executions/active/count'),
+}
