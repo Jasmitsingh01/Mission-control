@@ -9,7 +9,6 @@ export function AcceptInvitePage() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const acceptInvitation = useOrgStore((s) => s.acceptInvitation)
-  const setCurrentOrg = useOrgStore((s) => s.setCurrentOrg)
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')

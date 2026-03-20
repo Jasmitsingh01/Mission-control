@@ -7,7 +7,6 @@ import {
   Eye,
   Trash2,
   Check,
-  Settings,
   Plus,
   Mail,
   X,
@@ -27,7 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useOrgStore } from '@/stores/orgStore'
 import { useAuthStore } from '@/stores/authStore'
-import type { OrgMember, OrgRole } from '@/stores/orgStore'
+import type { OrgRole } from '@/stores/orgStore'
 
 const roleConfig: Record<OrgRole, { icon: React.ComponentType<{ className?: string }>; color: string; label: string }> = {
   owner: { icon: Crown, color: 'text-tertiary', label: 'Owner' },

@@ -51,7 +51,6 @@ app.use('/api/admin', adminRoutes);
 // Health check
 app.get('/api/health', async (_req, res) => {
   const { openclawHealthCheck } = await import('./services/openclawClient');
-  const { executor } = await import('./services/claudeExecutor');
   const openclawUp = await openclawHealthCheck();
 
   res.json({
@@ -60,7 +59,6 @@ app.get('/api/health', async (_req, res) => {
     openclaw: {
       connected: openclawUp,
       url: process.env.OPENCLAW_GATEWAY_URL || 'http://127.0.0.1:18789',
-      executionMode: executor.isUsingOpenClaw() ? 'openclaw' : 'claude-cli',
     },
   });
 });

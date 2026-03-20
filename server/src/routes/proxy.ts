@@ -12,7 +12,7 @@ function getOpenRouterKey(): string {
 }
 
 function getOpenRouterModel(): string {
-  return process.env.getOpenRouterModel() || 'google/gemini-2.0-flash-001';
+  return process.env.OPENROUTER_DEFAULT_MODEL || 'google/gemini-2.0-flash-001';
 }
 
 // All proxy routes require authentication

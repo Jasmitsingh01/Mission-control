@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Terminal,
   Wrench,
@@ -11,11 +11,22 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useExecutionStore } from '@/stores/executionStore'
+import { executeApi } from '@/lib/api'
 import type { StreamEvent } from '@/stores/executionStore'
+
+const EMPTY_EVENTS: StreamEvent[] = []
 
 interface ExecutionPanelProps {
   executionId: string
   className?: string
+}
+
+interface StoredLog {
+  timestamp: string
+  type: 'text' | 'tool_use' | 'tool_result' | 'error' | 'system'
+  content: string
+  toolName?: string
+  toolInput?: any
 }
 
 const eventIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -39,16 +50,72 @@ const eventColors: Record<string, string> = {
 export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) {
   const outputRef = useRef<HTMLDivElement>(null)
   const execution = useExecutionStore((s) => s.executions.find((e) => e.id === executionId))
-  const streamOutput = useExecutionStore((s) => s.getStreamOutput(executionId))
-  const streamEvents = useExecutionStore((s) => s.getStreamEvents(executionId))
+  const liveEvents = useExecutionStore((s) => s.streamEvents.get(executionId) ?? EMPTY_EVENTS)
   const abortExecution = useExecutionStore((s) => s.abortExecution)
+
+  // Stored logs fetched from API for completed/historical executions
+  const [storedLogs, setStoredLogs] = useState<StoredLog[]>([])
+  const [storedResult, setStoredResult] = useState<string | null>(null)
+  const [fetchedId, setFetchedId] = useState<string | null>(null)
+
+  // Fetch stored logs from API — on first load and poll while running
+  const isStillRunning = execution?.status === 'running' || execution?.status === 'queued'
+
+  useEffect(() => {
+    // Reset when switching executions
+    if (fetchedId !== executionId) {
+      setStoredLogs([])
+      setStoredResult(null)
+      setFetchedId(null)
+    }
+  }, [executionId, fetchedId])
+
+  useEffect(() => {
+    const fetchData = () => {
+      executeApi.get(executionId).then((data) => {
+        const exec = data.execution
+        if (exec) {
+          if (exec.logs && exec.logs.length > 0) setStoredLogs(exec.logs)
+          if (exec.result) setStoredResult(exec.result)
+          useExecutionStore.getState().fetchExecution(executionId)
+        }
+        setFetchedId(executionId)
+      }).catch(() => {
+        setFetchedId(executionId)
+      })
+    }
+
+    // Fetch immediately if not yet fetched and no live events
+    if (fetchedId !== executionId && liveEvents.length === 0) {
+      fetchData()
+    }
+
+    // Poll every 3s while running to catch completion
+    if (isStillRunning) {
+      const interval = setInterval(fetchData, 3000)
+      return () => clearInterval(interval)
+    }
+    return undefined
+  }, [executionId, liveEvents.length, fetchedId])
+
+  // Build display events: prefer live stream, fall back to stored logs
+  const displayEvents: StreamEvent[] = liveEvents.length > 0
+    ? liveEvents
+    : storedLogs.map((log) => ({
+        executionId,
+        type: log.type === 'system' ? 'status' : log.type,
+        content: log.content,
+        toolName: log.toolName,
+        toolInput: log.toolInput,
+        timestamp: new Date(log.timestamp).getTime(),
+      }))
 
   // Auto-scroll to bottom
   useEffect(() => {
     if (outputRef.current) {
       outputRef.current.scrollTop = outputRef.current.scrollHeight
     }
-  }, [streamOutput, streamEvents])
+  }, [displayEvents.length])
 
   if (!execution) {
     return (
@@ -61,6 +128,9 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
   const isRunning = execution.status === 'running' || execution.status === 'queued'
   const isComplete = execution.status === 'completed'
   const isFailed = execution.status === 'failed' || execution.status === 'aborted'
+
+  // For completed executions with no logs, show the result directly
+  const showResultFallback = (isComplete || isFailed) && displayEvents.length === 0
 
   return (
     <div className={cn('bg-surface-container-low rounded-xl border border-outline-variant/10 overflow-hidden', className)}>
@@ -94,21 +164,36 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
         )}
       </div>
 
-      {/* Stream output */}
+      {/* Output */}
       <div
         ref={outputRef}
         className="h-[400px] overflow-y-auto p-4 font-mono text-xs leading-relaxed"
       >
-        {streamEvents.length === 0 && isRunning && (
+        {displayEvents.length === 0 && isRunning && (
           <div className="flex items-center gap-2 text-outline">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             <span>Waiting for Claude Code output...</span>
           </div>
         )}
 
-        {streamEvents.map((event, i) => (
+        {displayEvents.map((event, i) => (
           <StreamLine key={i} event={event} />
         ))}
+
+        {/* Fallback: show stored result if no log events */}
+        {showResultFallback && (storedResult || execution.result) && (
+          <div className="whitespace-pre-wrap text-on-surface/90">
+            {storedResult || execution.result}
+          </div>
+        )}
+
+        {/* Show error message for failed executions */}
+        {isFailed && execution.error && displayEvents.length === 0 && (
+          <div className="flex items-start gap-2 my-2 py-1.5 px-2 rounded-lg bg-error/5 border border-error/10">
+            <AlertCircle className="h-3.5 w-3.5 text-error mt-0.5 shrink-0" />
+            <span className="text-error">{execution.error}</span>
+          </div>
+        )}
 
         {isRunning && (
           <div className="flex items-center gap-1.5 text-primary mt-2">
@@ -149,9 +234,6 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
 }
 
 function StreamLine({ event }: { event: StreamEvent }) {
-  const Icon = eventIcons[event.type] || Terminal
-  const color = eventColors[event.type] || 'text-outline'
-
   if (event.type === 'text') {
     return (
       <div className="whitespace-pre-wrap text-on-surface/90 mb-1">
@@ -165,7 +247,7 @@ function StreamLine({ event }: { event: StreamEvent }) {
       <div className="flex items-start gap-2 my-2 py-1.5 px-2 rounded-lg bg-primary/5 border border-primary/10">
         <Wrench className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
         <div>
-          <span className="text-primary font-bold">{event.toolName}</span>
+          <span className="text-primary font-bold">{event.toolName || event.content}</span>
           {event.toolInput && (
             <pre className="text-outline mt-1 text-[10px] max-h-20 overflow-hidden">
               {typeof event.toolInput === 'string'
@@ -194,6 +276,9 @@ function StreamLine({ event }: { event: StreamEvent }) {
       </div>
     )
   }
+
+  const Icon = eventIcons[event.type] || Terminal
+  const color = eventColors[event.type] || 'text-outline'
 
   return (
     <div className={cn('flex items-center gap-1.5 my-1', color)}>

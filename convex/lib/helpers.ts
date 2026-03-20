@@ -1,5 +1,5 @@
-import { GenericDatabaseReader, GenericDataModel } from "convex/server"
-import { GenericId } from "convex/values"
+import type { GenericDatabaseReader, GenericDataModel } from "convex/server"
+import type { GenericId } from "convex/values"
 
 /**
  * Verify that a document belongs to the given user.

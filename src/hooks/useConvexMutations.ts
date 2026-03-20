@@ -1,6 +1,3 @@
-import { useAuthStore } from '@/stores/authStore'
-import { useCallback } from 'react'
-
 /**
  * Convex mutation hooks - provide no-op stubs when Convex is not configured.
  * When Convex is set up (`npx convex dev`), replace these with actual

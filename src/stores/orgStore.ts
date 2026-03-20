@@ -143,7 +143,7 @@ export const useOrgStore = create<OrgState>((set, get) => ({
       const orgs = (data.orgs || []).map(mapOrg)
       const state = get()
       // If current org no longer exists, switch to first
-      const currentOrgId = orgs.find((o) => o.id === state.currentOrgId)
+      const currentOrgId = orgs.find((o: Org) => o.id === state.currentOrgId)
         ? state.currentOrgId
         : orgs[0]?.id || null
       saveOrgId(currentOrgId)

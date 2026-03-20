@@ -35,6 +35,14 @@ export function ExecutionsPage() {
     fetchExecutions()
   }, [])
 
+  // Poll for status updates when any execution is running/queued
+  const hasRunning = executions.some((e) => e.status === 'running' || e.status === 'queued')
+  useEffect(() => {
+    if (!hasRunning) return
+    const interval = setInterval(() => fetchExecutions(), 3000)
+    return () => clearInterval(interval)
+  }, [hasRunning])
+
   // Auto-expand active execution
   useEffect(() => {
     if (activeExecution) {

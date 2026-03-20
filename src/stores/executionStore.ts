@@ -116,7 +116,20 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
 
   fetchExecutions: async (page = 1) => {
     const data = await executeApi.list(page)
-    set({ executions: (data.executions || []).map(mapExecution) })
+    const fresh = (data.executions || []).map(mapExecution)
+
+    // Merge: API is the source of truth for status, but keep stream data
+    set((state) => {
+      const merged = fresh.map((apiExec: Execution) => {
+        const storeExec = state.executions.find((e) => e.id === apiExec.id)
+        // API status always wins over stale in-memory status
+        if (storeExec) {
+          return { ...storeExec, ...apiExec }
+        }
+        return apiExec
+      })
+      return { executions: merged }
+    })
   },
 
   fetchExecution: async (id) => {

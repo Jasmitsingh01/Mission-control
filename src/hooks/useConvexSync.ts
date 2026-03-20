@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/stores/authStore'
-import { useTaskStore } from '@/stores/taskStore'
-import { useAgentStore } from '@/stores/agentStore'
-import { useActivityStore } from '@/stores/activityStore'
-import { useJobStore } from '@/stores/jobStore'
-import { useMemoryStore } from '@/stores/memoryStore'
 
 /**
  * Syncs Convex real-time data into Zustand stores.

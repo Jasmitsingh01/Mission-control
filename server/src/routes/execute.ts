@@ -56,7 +56,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       prompt,
       claudeModel: model || 'claude-sonnet-4-6',
       allowedTools: allowedTools || ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'],
-      workingDirectory: workingDirectory || process.env.DEFAULT_WORKSPACE || process.cwd(),
+      workingDirectory: workingDirectory || process.cwd(),
       status: 'queued',
     });
     await execution.save();
@@ -67,7 +67,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       prompt,
       model: model || 'claude-sonnet-4-6',
       allowedTools: allowedTools || ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'],
-      workingDirectory: workingDirectory || process.env.DEFAULT_WORKSPACE || process.cwd(),
+      workingDirectory: workingDirectory || process.cwd(),
       maxTurns: maxTurns || 25,
       systemPrompt,
     }).catch((err) => {
@@ -108,7 +108,6 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       Execution.find(filter, {
         prompt: 0,
         logs: 0,
-        result: 0,
       })
         .sort({ createdAt: -1 })
         .skip(skip)
