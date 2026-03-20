@@ -95,6 +95,38 @@ export const orgApi = {
     }),
 }
 
+// Billing (Stripe)
+export const billingApi = {
+  status: () => apiFetch('/billing/status'),
+  createCheckout: (plan: 'pro' | 'enterprise', interval: 'monthly' | 'annual' = 'monthly') =>
+    apiFetch('/billing/checkout', { method: 'POST', body: JSON.stringify({ plan, interval }) }),
+  createPortal: () => apiFetch('/billing/portal', { method: 'POST', body: JSON.stringify({}) }),
+}
+
+// Admin
+export const adminApi = {
+  stats: () => apiFetch('/admin/stats'),
+  users: (params?: { page?: number; search?: string; plan?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.search) q.set('search', params.search)
+    if (params?.plan) q.set('plan', params.plan)
+    return apiFetch(`/admin/users?${q}`)
+  },
+  getUser: (id: string) => apiFetch(`/admin/users/${id}`),
+  patchUser: (id: string, data: { plan?: string }) =>
+    apiFetch(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteUser: (id: string) => apiFetch(`/admin/users/${id}`, { method: 'DELETE' }),
+  orgs: (params?: { page?: number; search?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.search) q.set('search', params.search)
+    return apiFetch(`/admin/orgs?${q}`)
+  },
+  patchOrg: (id: string, data: { plan?: string }) =>
+    apiFetch(`/admin/orgs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+}
+
 // Executions (Claude Code)
 export const executeApi = {
   start: (data: {

@@ -15,6 +15,8 @@ import { BlogPage } from '@/features/landing/BlogPage'
 // Auth pages
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 
 // Dashboard pages
@@ -30,6 +32,7 @@ import { OrgPage } from '@/features/orgs/OrgPage'
 import { AcceptInvitePage } from '@/features/orgs/AcceptInvitePage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { ExecutionsPage } from '@/features/executions/ExecutionsPage'
+import { AdminPage } from '@/features/admin/AdminPage'
 
 export default function App() {
   return (
@@ -49,6 +52,8 @@ export default function App() {
           <Route element={<PublicLayout />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
 
           {/* Invitation accept */}
@@ -74,6 +79,7 @@ export default function App() {
             <Route path="org" element={<OrgPage />} />
             <Route path="executions" element={<ExecutionsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="admin" element={<AdminPage />} />
           </Route>
         </Routes>
       </TooltipProvider>

@@ -4,7 +4,6 @@ import {
   Bot,
   Clock,
   Brain,
-  Puzzle,
   ChevronLeft,
   ChevronRight,
   Settings,
@@ -12,16 +11,20 @@ import {
   Plus,
   Store,
   Terminal,
+  ShieldAlert,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/uiStore'
+import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map((e: string) => e.trim().toLowerCase())
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -37,6 +40,8 @@ const navItems = [
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
+  const user = useAuthStore((s) => s.user)
+  const isAdmin = user && ADMIN_EMAILS.includes(user.email.toLowerCase())
 
   return (
     <aside
@@ -70,6 +75,15 @@ export function Sidebar() {
         {navItems.map((item) => (
           <SidebarLink key={item.to} {...item} collapsed={sidebarCollapsed} />
         ))}
+        {isAdmin && (
+          <SidebarLink
+            to="/dashboard/admin"
+            icon={ShieldAlert}
+            label="Admin"
+            collapsed={sidebarCollapsed}
+            danger
+          />
+        )}
       </nav>
 
       {/* Bottom */}
@@ -110,11 +124,13 @@ function SidebarLink({
   icon: Icon,
   label,
   collapsed,
+  danger = false,
 }: {
   to: string
   icon: React.ComponentType<{ className?: string }>
   label: string
   collapsed: boolean
+  danger?: boolean
 }) {
   const link = (
     <NavLink
@@ -123,8 +139,12 @@ function SidebarLink({
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
-          "font-mono text-xs uppercase tracking-widest",
-          isActive
+          'font-mono text-xs uppercase tracking-widest',
+          danger
+            ? isActive
+              ? 'text-error bg-error/10 border-r-2 border-error rounded-l-lg'
+              : 'text-error/70 hover:bg-error/10 hover:translate-x-1 rounded-lg'
+            : isActive
             ? 'text-secondary bg-surface-container-low border-r-2 border-secondary rounded-l-lg'
             : 'text-on-surface-variant hover:bg-surface-container-low/50 hover:translate-x-1 rounded-lg'
         )
