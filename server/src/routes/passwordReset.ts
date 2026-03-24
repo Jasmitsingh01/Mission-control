@@ -5,7 +5,24 @@
  */
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import User from '../models/User';
+
+function getTransporter() {
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) return null;
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+}
 
 const router = Router();
 
@@ -43,19 +60,42 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-    // In production: send email via SendGrid/Postmark/SES
-    // For now, log the link (development mode)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[PASSWORD RESET] Email: ${email} | URL: ${resetUrl}`);
-    }
+    console.log(`[PASSWORD RESET] Email: ${email} | URL: ${resetUrl}`);
 
-    // TODO: integrate email provider
-    // await sendEmail({ to: email, subject: 'Reset your password', text: resetUrl })
+    // Send reset email via SMTP
+    const transporter = getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: email,
+          subject: 'Reset your password — Mission Control',
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #6750A4, #9B8ACB); padding: 24px; border-radius: 16px; text-align: center; color: white;">
+                <h1 style="margin: 0; font-size: 24px;">Password Reset</h1>
+                <p style="margin: 8px 0 0; opacity: 0.9;">Mission Control</p>
+              </div>
+              <div style="background: #f8f8f8; padding: 20px; border-radius: 12px; margin-top: 16px;">
+                <p>You requested a password reset. Click the button below to set a new password. This link expires in 1 hour.</p>
+                <div style="text-align: center; margin-top: 20px;">
+                  <a href="${resetUrl}" style="display: inline-block; background: #6750A4; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reset Password</a>
+                </div>
+                <p style="margin-top: 16px; font-size: 12px; color: #888;">If you didn't request this, you can safely ignore this email.</p>
+              </div>
+            </div>
+          `,
+        });
+        console.log(`[PASSWORD RESET] Email sent to ${email}`);
+      } catch (err: any) {
+        console.error(`[PASSWORD RESET] Email failed:`, err.message);
+      }
+    } else {
+      console.warn('[PASSWORD RESET] SMTP not configured — email not sent');
+    }
 
     res.json({
       message: 'If that email is registered, a reset link has been sent.',
-      // Return link only in development
-      ...(process.env.NODE_ENV !== 'production' && { devResetUrl: resetUrl }),
     });
   } catch (err) {
     console.error('Forgot password error:', err);

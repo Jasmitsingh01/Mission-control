@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Rocket, Zap, Building2, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, Rocket, Zap, Building2, X, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
+import { billingApi } from '@/lib/api'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -114,6 +116,44 @@ const faqs = [
 export function PricingPage() {
   const [annual, setAnnual] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+  const [_, setBillingError] = useState('')
+  const user = useAuthStore((s) => s.user)
+  const navigate = useNavigate()
+
+  async function handlePlanSelect(planName: string) {
+    if (planName === 'Starter') {
+      navigate('/signup')
+      return
+    }
+    if (planName === 'Enterprise') {
+      navigate('/contact')
+      return
+    }
+
+    // For Pro plan: if logged in, redirect to Stripe Checkout; otherwise to signup
+    if (!user) {
+      navigate('/signup')
+      return
+    }
+
+    const plan = planName.toLowerCase() as 'pro' | 'enterprise'
+    const interval = annual ? 'annual' : 'monthly'
+    setCheckoutLoading(plan)
+    setBillingError('')
+    try {
+      const { url, configured } = await billingApi.createCheckout(plan, interval)
+      if (configured === false) {
+        setBillingError('Stripe is not configured yet. Contact the administrator.')
+        return
+      }
+      if (url) window.location.href = url
+    } catch (e: any) {
+      setBillingError(e.message || 'Failed to create checkout session.')
+    } finally {
+      setCheckoutLoading(null)
+    }
+  }
 
   return (
     <div className="pt-24 pb-16 bg-surface-dim">
@@ -179,15 +219,21 @@ export function PricingPage() {
                 </div>
                 <p className="text-sm text-on-surface-variant mb-6">{plan.desc}</p>
 
-                <Link to={plan.name === 'Enterprise' ? '/contact' : '/signup'}>
-                  <button className={`w-full py-3 rounded-xl text-sm font-semibold mb-6 transition-all ${
+                <button
+                  onClick={() => handlePlanSelect(plan.name)}
+                  disabled={checkoutLoading === plan.name.toLowerCase()}
+                  className={`w-full py-3 rounded-xl text-sm font-semibold mb-6 transition-all disabled:opacity-50 ${
                     plan.popular
                       ? 'synthetic-gradient text-white hover:opacity-90 shadow-lg shadow-primary-container/20'
                       : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container'
-                  }`}>
-                    {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
-                  </button>
-                </Link>
+                  }`}
+                >
+                  {checkoutLoading === plan.name.toLowerCase() ? (
+                    <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing…</span>
+                  ) : plan.name === 'Enterprise' ? 'Contact Sales' : plan.name === 'Starter' ? 'Get Started Free' : (
+                    user ? `Subscribe to ${plan.name}` : 'Get Started'
+                  )}
+                </button>
 
                 <ul className="space-y-3">
                   {plan.features.map((f) => (

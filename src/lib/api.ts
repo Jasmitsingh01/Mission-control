@@ -131,6 +131,80 @@ export const adminApi = {
     apiFetch(`/admin/orgs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 }
 
+// Tasks (Kanban)
+export const taskApi = {
+  create: (data: {
+    title: string
+    desc: string
+    status?: string
+    assignee: string
+    priority?: string
+    tags?: string[]
+    workspaceId: string
+  }) => apiFetch('/tasks', { method: 'POST', body: JSON.stringify(data) }),
+  getAll: (workspaceId: string) => apiFetch(`/tasks?workspaceId=${workspaceId}`),
+  get: (id: string) => apiFetch(`/tasks/${id}`),
+  update: (id: string, data: Record<string, unknown>) =>
+    apiFetch(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => apiFetch(`/tasks/${id}`, { method: 'DELETE' }),
+}
+
+// Workspaces
+export const workspaceApi = {
+  create: (data: Record<string, unknown>) =>
+    apiFetch('/workspaces', { method: 'POST', body: JSON.stringify(data) }),
+  getAll: () => apiFetch('/workspaces'),
+  get: (id: string) => apiFetch(`/workspaces/${id}`),
+  update: (id: string, data: Record<string, unknown>) =>
+    apiFetch(`/workspaces/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => apiFetch(`/workspaces/${id}`, { method: 'DELETE' }),
+  executeTask: (id: string, prompt: string) =>
+    apiFetch(`/workspaces/${id}/execute-task`, { method: 'POST', body: JSON.stringify({ prompt }) }),
+  getActiveSessions: () => apiFetch('/workspaces/sessions/active'),
+}
+
+// Gateways
+export const gatewayApi = {
+  getAll: (params?: { limit?: number; offset?: number }) => {
+    const q = new URLSearchParams()
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.offset) q.set('offset', String(params.offset))
+    return apiFetch(`/gateways?${q}`)
+  },
+  create: (data: Record<string, unknown>) =>
+    apiFetch('/gateways', { method: 'POST', body: JSON.stringify(data) }),
+  get: (id: string) => apiFetch(`/gateways/${id}`),
+  update: (id: string, data: Record<string, unknown>) =>
+    apiFetch(`/gateways/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) => apiFetch(`/gateways/${id}`, { method: 'DELETE' }),
+  getStatus: () => apiFetch('/gateways/status'),
+  getSessions: (gatewayId?: string) =>
+    apiFetch(`/gateways/sessions${gatewayId ? `?gatewayId=${gatewayId}` : ''}`),
+  sendSessionMessage: (sessionId: string, content: string) =>
+    apiFetch(`/gateways/sessions/${sessionId}/message`, { method: 'POST', body: JSON.stringify({ content }) }),
+  getCommands: () => apiFetch('/gateways/commands'),
+}
+
+// Agents (lifecycle)
+export const agentApi = {
+  getAll: (params?: { workspaceId?: string; gatewayId?: string; limit?: number; offset?: number }) => {
+    const q = new URLSearchParams()
+    if (params?.workspaceId) q.set('workspaceId', params.workspaceId)
+    if (params?.gatewayId) q.set('gatewayId', params.gatewayId)
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.offset) q.set('offset', String(params.offset))
+    return apiFetch(`/agents?${q}`)
+  },
+  create: (data: Record<string, unknown>) =>
+    apiFetch('/agents', { method: 'POST', body: JSON.stringify(data) }),
+  get: (id: string) => apiFetch(`/agents/${id}`),
+  update: (id: string, data: Record<string, unknown>) =>
+    apiFetch(`/agents/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) => apiFetch(`/agents/${id}`, { method: 'DELETE' }),
+  heartbeat: (id: string, data?: { status?: string }) =>
+    apiFetch(`/agents/${id}/heartbeat`, { method: 'POST', body: JSON.stringify(data || {}) }),
+}
+
 // Executions (Claude Code)
 export const executeApi = {
   start: (data: {

@@ -36,6 +36,7 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
     }
 
     const apiKey = user.settings?.openrouterApiKey || getOpenRouterKey();
+    console.log(`[DEBUG] API key source: ${user.settings?.openrouterApiKey ? 'user-settings' : 'env'}, key starts with: ${apiKey?.slice(0, 15)}..., model: ${model || user.settings?.preferredModel || getOpenRouterModel()}`);
     if (!apiKey) {
       res.status(400).json({ error: 'No OpenRouter API key configured. Set one in your settings or contact an admin.' });
       return;
