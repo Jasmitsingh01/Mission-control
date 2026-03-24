@@ -82,7 +82,7 @@ export function setupWebSocket(server: HttpServer): WebSocketServer {
 
     client.send(JSON.stringify({ type: 'connected', userId: client.userId }));
 
-    // Handle incoming messages (subscribe/unsubscribe to executions)
+    // Handle incoming messages
     client.on('message', (data) => {
       try {
         const msg = JSON.parse(data.toString());
@@ -99,6 +99,26 @@ export function setupWebSocket(server: HttpServer): WebSocketServer {
         if (msg.type === 'unsubscribe' && msg.executionId) {
           client.subscribedExecutions.delete(msg.executionId);
           executionSubscribers.get(msg.executionId)?.delete(client);
+        }
+
+        // Bidirectional: user responding to an interaction request
+        if (msg.type === 'interaction_response' && msg.executionId && msg.requestId) {
+          let handled = false;
+
+          // Try executor first (single execution)
+          handled = executor.respondToInteraction(msg.executionId, msg.requestId, msg.response);
+
+          // Try orchestrator (mission agent execution)
+          if (!handled) {
+            handled = orchestrator.respondToInteraction(msg.executionId, msg.requestId, msg.response);
+          }
+
+          client.send(JSON.stringify({
+            type: 'interaction_response_ack',
+            executionId: msg.executionId,
+            requestId: msg.requestId,
+            handled,
+          }));
         }
       } catch {
         // Ignore invalid messages
@@ -131,18 +151,20 @@ export function setupWebSocket(server: HttpServer): WebSocketServer {
     }
   });
 
-  // Listen to mission-level events and broadcast to all org subscribers
+  // Listen to mission-level events and broadcast
   orchestrator.on('mission_stream', (event: MissionStreamEvent) => {
-    // Broadcast mission_complete to all connected clients in the org
-    if (event.type === 'mission_complete') {
+    // Broadcast mission_complete and interaction_request to all connected clients
+    if (event.type === 'mission_complete' || event.type === 'interaction_request') {
       const payload = JSON.stringify({
-        type: 'mission_complete',
+        type: event.type,
         missionId: event.missionId,
+        agentName: event.agentName,
+        agentRole: event.agentRole,
+        executionId: event.executionId,
         content: event.content,
         timestamp: event.timestamp,
       });
 
-      // Send to all connected clients (they'll filter by relevance)
       wss.clients.forEach((ws) => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(payload);

@@ -35,11 +35,13 @@ export default function MissionControlPage() {
     status,
     logs,
     isStreaming,
+    pendingInteractions,
     connect,
     disconnect,
     sendMessage,
     clearLogs,
     pushLog,
+    respondToGatewayInteraction,
   } = useOpenClaw(sessionKey);
 
   // Fetch workspaces
@@ -265,6 +267,52 @@ export default function MissionControlPage() {
               </button>
             </div>
           </div>
+
+          {/* Pending interaction requests */}
+          {pendingInteractions.length > 0 && (
+            <div className="space-y-2">
+              {pendingInteractions.map((req) => (
+                <div
+                  key={req.requestId}
+                  className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="text-amber-400 text-sm font-semibold">{req.title}</span>
+                  </div>
+                  {req.description && (
+                    <p className="text-xs text-amber-300/70">{req.description}</p>
+                  )}
+                  {req.type === "approval" ? (
+                    <div className="flex items-center gap-2">
+                      {(req.options || ["Approve", "Reject"]).map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => respondToGatewayInteraction(req.requestId, { action: opt })}
+                          className="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-colors"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Type response..."
+                        className="flex-1 bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-700 focus:border-amber-500/50 outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            respondToGatewayInteraction(req.requestId, { text: (e.target as HTMLInputElement).value });
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Terminal */}
           <div className="flex-1 min-h-0">

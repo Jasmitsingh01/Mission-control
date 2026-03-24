@@ -9,6 +9,7 @@ import {
   Loader2,
   Bot,
   ListTodo,
+  Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/stores/taskStore'
@@ -39,6 +40,7 @@ export function MissionLauncherPage() {
 
   const connectWebSocket = useExecutionStore((s) => s.connectWebSocket)
   const fetchExecutions = useExecutionStore((s) => s.fetchExecutions)
+  const pendingInteractionsMap = useExecutionStore((s) => s.pendingInteractions)
 
   const [step, setStep] = useState<Step>('describe')
   const [missionName, setMissionName] = useState('')
@@ -380,6 +382,26 @@ export function MissionLauncherPage() {
               </div>
             </div>
           </div>
+
+          {/* Notification banner when agents need input */}
+          {(() => {
+            const totalPending = agentExecutionIds.reduce((sum, ae) => {
+              const reqs = pendingInteractionsMap.get(ae.id)
+              return sum + (reqs ? reqs.filter((r) => r.status === 'pending').length : 0)
+            }, 0)
+            if (totalPending === 0) return null
+            return (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+                <Bell className="h-5 w-5 text-amber-400 animate-bounce" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-200">
+                    {totalPending} agent{totalPending !== 1 ? 's need' : ' needs'} your input
+                  </p>
+                  <p className="text-xs text-amber-300/70">Scroll down to the requesting agent to respond</p>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Per-agent execution panels */}
           {agentExecutionIds.length > 0 && (

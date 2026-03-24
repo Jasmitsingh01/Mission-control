@@ -224,5 +224,12 @@ export const executeApi = {
 
   abort: (id: string) => apiFetch(`/executions/${id}/abort`, { method: 'POST' }),
 
+  respond: (id: string, requestId: string, response: any) =>
+    apiFetch(`/executions/${id}/respond`, { method: 'POST', body: JSON.stringify({ requestId, response }) }),
+
+  artifacts: (id: string) => apiFetch(`/executions/${id}/artifacts`),
+
+  interactions: (id: string) => apiFetch(`/executions/${id}/interactions`),
+
   activeCount: () => apiFetch('/executions/active/count'),
 }

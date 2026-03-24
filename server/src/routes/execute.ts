@@ -176,6 +176,44 @@ router.post('/:id/abort', async (req: Request, res: Response): Promise<void> => 
   }
 });
 
+// POST /:id/respond - Respond to an interaction request (REST fallback for WS)
+router.post('/:id/respond', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { requestId, response } = req.body;
+    if (!requestId) {
+      res.status(400).json({ error: 'requestId is required.' });
+      return;
+    }
+
+    const handled = executor.respondToInteraction(req.params.id as string, requestId, response);
+    res.json({ success: handled });
+  } catch (err: any) {
+    console.error('Respond to interaction error:', err);
+    res.status(500).json({ error: 'Failed to process response.' });
+  }
+});
+
+// GET /:id/artifacts - Get collected artifacts for an execution
+router.get('/:id/artifacts', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const artifacts = executor.getArtifacts(req.params.id as string);
+    res.json({ artifacts });
+  } catch (err: any) {
+    console.error('Get artifacts error:', err);
+    res.status(500).json({ error: 'Failed to fetch artifacts.' });
+  }
+});
+
+// GET /:id/interactions - Get pending interaction requests
+router.get('/:id/interactions', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const interactions = executor.getPendingInteractions(req.params.id as string);
+    res.json({ interactions });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch interactions.' });
+  }
+});
+
 // GET /active/count - Get active execution count for org
 router.get('/active/count', async (req: Request, res: Response): Promise<void> => {
   try {

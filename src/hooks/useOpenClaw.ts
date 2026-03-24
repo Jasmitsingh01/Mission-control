@@ -50,11 +50,21 @@ export interface TerminalEntry {
 
 export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 
+export interface PendingGatewayInteraction {
+  requestId: string;
+  type: "approval" | "user_input" | "file_request";
+  title: string;
+  description: string;
+  options?: string[];
+  status: "pending" | "responded";
+}
+
 export function useOpenClaw(sessionKey: string | undefined) {
   const wsRef = useRef<WebSocket | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [logs, setLogs] = useState<TerminalEntry[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [pendingInteractions, setPendingInteractions] = useState<PendingGatewayInteraction[]>([]);
   const streamBufferRef = useRef("");
   const streamEntryIdRef = useRef<string | null>(null);
   const reqCounterRef = useRef(0);
@@ -124,6 +134,29 @@ export function useOpenClaw(sessionKey: string | undefined) {
               ? payload.content
               : JSON.stringify(payload.content || "");
           pushLog("tool_result", result.slice(0, 500));
+          return;
+        }
+
+        // Handle interaction requests from gateway
+        if (payload.type === "interaction_request" || payload.type === "approval_request" || payload.type === "human_input") {
+          const reqData = payload as any;
+          const interaction: PendingGatewayInteraction = {
+            requestId: reqData.requestId || `gw_${Date.now()}`,
+            type: reqData.type === "approval_request" ? "approval" : "user_input",
+            title: reqData.title || "Agent needs your input",
+            description: reqData.description || reqData.text || "",
+            options: reqData.options,
+            status: "pending",
+          };
+          setPendingInteractions((prev) => [...prev, interaction]);
+          pushLog("system", `Agent needs input: ${interaction.title}`);
+          return;
+        }
+
+        if (payload.type === "artifact") {
+          const name = (payload as any).name || "file";
+          const path = (payload as any).path || "";
+          pushLog("info", `Artifact: ${name} — ${path}`);
           return;
         }
 
@@ -243,10 +276,39 @@ export function useOpenClaw(sessionKey: string | undefined) {
     }
   }, []);
 
+  const respondToGatewayInteraction = useCallback(
+    (requestId: string, response: any) => {
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        pushLog("error", "Not connected to gateway");
+        return;
+      }
+      if (!sessionKey) {
+        pushLog("error", "No active session");
+        return;
+      }
+
+      const reqId = `rpc-respond-${++reqCounterRef.current}`;
+      const rpc: GatewayRpcRequest = {
+        type: "req",
+        id: reqId,
+        method: "interaction.respond",
+        params: { sessionKey, requestId, response },
+      };
+
+      wsRef.current.send(JSON.stringify(rpc));
+      setPendingInteractions((prev) =>
+        prev.map((r) => (r.requestId === requestId ? { ...r, status: "responded" } : r))
+      );
+      pushLog("system", `Responded to: ${requestId}`);
+    },
+    [sessionKey, pushLog]
+  );
+
   const clearLogs = useCallback(() => {
     setLogs([]);
     streamBufferRef.current = "";
     streamEntryIdRef.current = null;
+    setPendingInteractions([]);
   }, []);
 
   useEffect(() => {
@@ -259,12 +321,14 @@ export function useOpenClaw(sessionKey: string | undefined) {
     status,
     logs,
     isStreaming,
+    pendingInteractions: pendingInteractions.filter((r) => r.status === "pending"),
     connect,
     disconnect,
     sendMessage,
     sendRpc,
     clearLogs,
     pushLog,
+    respondToGatewayInteraction,
     sessionKey,
   };
 }

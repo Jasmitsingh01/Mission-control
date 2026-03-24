@@ -27,6 +27,31 @@ function playCompletionBeep() {
   }
 }
 
+/** Play an attention beep for interaction requests */
+function playAttentionBeep() {
+  try {
+    const ctx = new AudioContext()
+    const playTone = (freq: number, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'triangle'
+      gain.gain.setValueAtTime(0.25, startTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
+      osc.start(startTime)
+      osc.stop(startTime + duration)
+    }
+    playTone(600, ctx.currentTime, 0.12)
+    playTone(800, ctx.currentTime + 0.15, 0.12)
+    playTone(600, ctx.currentTime + 0.3, 0.15)
+    setTimeout(() => ctx.close(), 1000)
+  } catch {
+    // ignore
+  }
+}
+
 /** Show browser push notification */
 function showBrowserNotification(title: string, body: string) {
   if (!('Notification' in window)) return
@@ -43,11 +68,33 @@ function showBrowserNotification(title: string, body: string) {
 
 export interface StreamEvent {
   executionId: string
-  type: 'text' | 'tool_use' | 'tool_result' | 'error' | 'status' | 'complete'
+  type: 'text' | 'tool_use' | 'tool_result' | 'error' | 'status' | 'complete' | 'interaction_request' | 'interaction_response' | 'artifact'
   content: string
   toolName?: string
   toolInput?: any
   timestamp: number
+}
+
+export interface InteractionRequest {
+  requestId: string
+  executionId: string
+  agentName?: string
+  type: 'approval' | 'user_input' | 'file_request'
+  title: string
+  description: string
+  options?: string[]
+  inputSchema?: { fields: { name: string; label: string; type: 'text' | 'textarea' | 'select'; required: boolean; options?: string[] }[] }
+  status: 'pending' | 'responded' | 'expired'
+  createdAt: number
+}
+
+export interface ArtifactInfo {
+  name: string
+  path: string
+  type: string
+  size?: number
+  content?: string
+  createdAt: number
 }
 
 export interface Execution {
@@ -75,6 +122,8 @@ interface ExecutionState {
   activeExecution: string | null
   streamOutput: Map<string, string>
   streamEvents: Map<string, StreamEvent[]>
+  pendingInteractions: Map<string, InteractionRequest[]>
+  artifacts: Map<string, ArtifactInfo[]>
   ws: WebSocket | null
   isConnected: boolean
 
@@ -97,6 +146,9 @@ interface ExecutionState {
   getStreamOutput: (id: string) => string
   getStreamEvents: (id: string) => StreamEvent[]
   clearStream: (id: string) => void
+  respondToInteraction: (executionId: string, requestId: string, response: any) => void
+  getPendingInteractions: (executionId: string) => InteractionRequest[]
+  getArtifacts: (executionId: string) => ArtifactInfo[]
 }
 
 function getWsUrl(): string {
@@ -126,6 +178,8 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
   activeExecution: null,
   streamOutput: new Map(),
   streamEvents: new Map(),
+  pendingInteractions: new Map(),
+  artifacts: new Map(),
   ws: null,
   isConnected: false,
 
@@ -208,39 +262,125 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
         if (msg.type === 'mission_complete') {
           playCompletionBeep()
           showBrowserNotification('Mission Complete', msg.content || 'Your mission has finished!')
-          // Also refresh executions list
           get().fetchExecutions()
+        }
+
+        // Handle mission-level interaction_request (broadcast to all clients)
+        if (msg.type === 'interaction_request' && !msg.executionId) {
+          playAttentionBeep()
+          const parsed = JSON.parse(msg.content || '{}')
+          showBrowserNotification(
+            `Agent needs input: ${msg.agentName || 'Agent'}`,
+            parsed.title || 'An agent requires your attention'
+          )
         }
 
         // Handle stream events
         if (msg.executionId && msg.type) {
           const streamEvent = msg as StreamEvent
+          const execId = streamEvent.executionId
 
+          // Always update events list
           set((state) => {
-            const newOutput = new Map(state.streamOutput)
             const newEvents = new Map(state.streamEvents)
+            const events = newEvents.get(execId) || []
+            newEvents.set(execId, [...events.slice(-200), streamEvent])
+            return { streamEvents: newEvents }
+          })
 
-            // Append to output
-            if (streamEvent.type === 'text' || streamEvent.type === 'tool_use' || streamEvent.type === 'tool_result') {
-              const current = newOutput.get(streamEvent.executionId) || ''
+          // Update output for text/tool events
+          if (streamEvent.type === 'text' || streamEvent.type === 'tool_use' || streamEvent.type === 'tool_result') {
+            set((state) => {
+              const newOutput = new Map(state.streamOutput)
+              const current = newOutput.get(execId) || ''
               if (streamEvent.type === 'text') {
-                newOutput.set(streamEvent.executionId, current + streamEvent.content)
+                newOutput.set(execId, current + streamEvent.content)
               } else if (streamEvent.type === 'tool_use') {
-                newOutput.set(streamEvent.executionId, current + `\n[Tool: ${streamEvent.toolName}]\n`)
+                newOutput.set(execId, current + `\n[Tool: ${streamEvent.toolName}]\n`)
               } else if (streamEvent.type === 'tool_result') {
-                newOutput.set(streamEvent.executionId, current + `\n${streamEvent.content}\n`)
+                newOutput.set(execId, current + `\n${streamEvent.content}\n`)
               }
+              return { streamOutput: newOutput }
+            })
+          }
+
+          // Handle interaction requests
+          if (streamEvent.type === 'interaction_request') {
+            try {
+              const parsed = JSON.parse(streamEvent.content)
+              const req: InteractionRequest = {
+                requestId: parsed.requestId,
+                executionId: execId,
+                agentName: parsed.agentName,
+                type: parsed.type || 'user_input',
+                title: parsed.title || 'Agent needs input',
+                description: parsed.description || '',
+                options: parsed.options,
+                inputSchema: parsed.inputSchema,
+                status: 'pending',
+                createdAt: Date.now(),
+              }
+              set((state) => {
+                const newInteractions = new Map(state.pendingInteractions)
+                const existing = newInteractions.get(execId) || []
+                newInteractions.set(execId, [...existing, req])
+                return { pendingInteractions: newInteractions }
+              })
+              playAttentionBeep()
+              showBrowserNotification('Agent needs your input', req.title)
+            } catch {
+              // ignore
             }
+          }
 
-            // Append to events
-            const events = newEvents.get(streamEvent.executionId) || []
-            newEvents.set(streamEvent.executionId, [...events.slice(-200), streamEvent])
+          // Handle interaction responses
+          if (streamEvent.type === 'interaction_response') {
+            try {
+              const parsed = JSON.parse(streamEvent.content)
+              set((state) => {
+                const newInteractions = new Map(state.pendingInteractions)
+                const existing = newInteractions.get(execId) || []
+                newInteractions.set(
+                  execId,
+                  existing.map((r) =>
+                    r.requestId === parsed.requestId ? { ...r, status: 'responded' as const } : r
+                  )
+                )
+                return { pendingInteractions: newInteractions }
+              })
+            } catch {
+              // ignore
+            }
+          }
 
-            // Update execution status
-            let executions = state.executions
-            if (streamEvent.type === 'status' || streamEvent.type === 'complete' || streamEvent.type === 'error') {
-              executions = executions.map((e) => {
-                if (e.id !== streamEvent.executionId) return e
+          // Handle artifacts
+          if (streamEvent.type === 'artifact') {
+            try {
+              const parsed = JSON.parse(streamEvent.content)
+              const art: ArtifactInfo = {
+                name: parsed.name || 'Unknown',
+                path: parsed.path || '',
+                type: parsed.type || 'file',
+                size: parsed.size,
+                content: parsed.content,
+                createdAt: Date.now(),
+              }
+              set((state) => {
+                const newArtifacts = new Map(state.artifacts)
+                const existing = newArtifacts.get(execId) || []
+                newArtifacts.set(execId, [...existing, art])
+                return { artifacts: newArtifacts }
+              })
+            } catch {
+              // ignore
+            }
+          }
+
+          // Update execution status
+          if (streamEvent.type === 'status' || streamEvent.type === 'complete' || streamEvent.type === 'error') {
+            set((state) => ({
+              executions: state.executions.map((e) => {
+                if (e.id !== execId) return e
                 if (streamEvent.type === 'complete') {
                   return { ...e, status: 'completed' as const, result: streamEvent.content, completedAt: Date.now() }
                 }
@@ -254,11 +394,9 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
                   return { ...e, status: 'aborted' as const, completedAt: Date.now() }
                 }
                 return e
-              })
-            }
-
-            return { streamOutput: newOutput, streamEvents: newEvents, executions }
-          })
+              }),
+            }))
+          }
         }
       } catch {
         // Ignore invalid messages
@@ -313,5 +451,38 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
       newEvents.delete(id)
       return { streamOutput: newOutput, streamEvents: newEvents }
     })
+  },
+
+  respondToInteraction: (executionId, requestId, response) => {
+    const ws = get().ws
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'interaction_response',
+        executionId,
+        requestId,
+        response,
+      }))
+    }
+
+    // Optimistically mark as responded
+    set((state) => {
+      const newInteractions = new Map(state.pendingInteractions)
+      const existing = newInteractions.get(executionId) || []
+      newInteractions.set(
+        executionId,
+        existing.map((r) =>
+          r.requestId === requestId ? { ...r, status: 'responded' as const } : r
+        )
+      )
+      return { pendingInteractions: newInteractions }
+    })
+  },
+
+  getPendingInteractions: (executionId) => {
+    return (get().pendingInteractions.get(executionId) || []).filter((r) => r.status === 'pending')
+  },
+
+  getArtifacts: (executionId) => {
+    return get().artifacts.get(executionId) || []
   },
 }))

@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import Execution from '../models/Execution';
 import MissionHistory from '../models/MissionHistory';
-import { openclawStream, openclawHealthCheck } from './openclawClient';
-import type { OpenClawMessage } from './openclawClient';
+import { openclawStream, openclawHealthCheck, openclawRespond } from './openclawClient';
+import type { OpenClawMessage, InteractionRequest, Artifact } from './openclawClient';
 import { notifyMissionComplete } from './notifier';
 
 /**
@@ -84,13 +84,15 @@ export interface MissionStreamEvent {
   agentRole: string;
   agentName: string;
   executionId: string;
-  type: 'text' | 'tool_use' | 'tool_result' | 'error' | 'status' | 'agent_complete' | 'mission_complete';
+  type: 'text' | 'tool_use' | 'tool_result' | 'error' | 'status' | 'agent_complete' | 'mission_complete' | 'interaction_request' | 'interaction_response' | 'artifact';
   content: string;
   timestamp: number;
 }
 
 class MissionOrchestrator extends EventEmitter {
   private activeMissions: Map<string, MissionStatus> = new Map();
+  private pendingResolvers: Map<string, (response: any) => void> = new Map();
+  private missionArtifacts: Map<string, Artifact[]> = new Map();
 
   /**
    * Launch a full mission — creates per-agent executions and runs them.
@@ -257,12 +259,49 @@ Be thorough, precise, and report your progress for each task.`;
       ];
 
       let fullResult = '';
+      const artifacts: Artifact[] = [];
 
       for await (const chunk of openclawStream({ messages, maxTokens: agent.maxTokens || 4096 })) {
         if (chunk.type === 'delta') {
           fullResult += chunk.content;
           this.emitMissionEvent(missionId, agentExec, 'text', chunk.content);
           execution.logs.push({ timestamp: new Date(), type: 'text', content: chunk.content });
+
+        } else if (chunk.type === 'interaction_request') {
+          // Agent needs user input — pause and wait
+          const interactionReq: InteractionRequest = JSON.parse(chunk.content);
+          this.emitMissionEvent(missionId, agentExec, 'interaction_request', chunk.content);
+          execution.logs.push({
+            timestamp: new Date(),
+            type: 'system' as any,
+            content: `[WAITING] ${interactionReq.title}: ${interactionReq.description}`,
+          });
+
+          const userResponse = await new Promise<any>((resolve) => {
+            const key = `${agentExec.executionId}:${interactionReq.requestId}`;
+            this.pendingResolvers.set(key, resolve);
+            setTimeout(() => {
+              if (this.pendingResolvers.has(key)) {
+                this.pendingResolvers.delete(key);
+                resolve({ timeout: true, message: 'No response received — continuing with default.' });
+              }
+            }, 10 * 60 * 1000);
+          });
+
+          await openclawRespond(interactionReq.requestId, userResponse);
+          this.emitMissionEvent(missionId, agentExec, 'interaction_response', JSON.stringify({
+            requestId: interactionReq.requestId,
+            response: userResponse,
+          }));
+
+        } else if (chunk.type === 'artifact') {
+          const artifact: Artifact = JSON.parse(chunk.content);
+          artifacts.push(artifact);
+          const mArtifacts = this.missionArtifacts.get(missionId) || [];
+          mArtifacts.push(artifact);
+          this.missionArtifacts.set(missionId, mArtifacts);
+          this.emitMissionEvent(missionId, agentExec, 'artifact', chunk.content);
+
         } else if (chunk.type === 'error') {
           throw new Error(chunk.content);
         }
@@ -270,12 +309,19 @@ Be thorough, precise, and report your progress for each task.`;
 
       execution.status = 'completed';
       execution.result = fullResult || '(no output)';
+      if (artifacts.length > 0) {
+        execution.result += `\n\n--- Artifacts (${artifacts.length}) ---\n` +
+          artifacts.map((a) => `- ${a.name} (${a.type}): ${a.path}`).join('\n');
+      }
       execution.completedAt = new Date();
       execution.usage.durationMs = Date.now() - startTime;
       await execution.save();
 
       agentExec.status = 'completed';
-      this.emitMissionEvent(missionId, agentExec, 'agent_complete', fullResult.slice(0, 500));
+      this.emitMissionEvent(missionId, agentExec, 'agent_complete', JSON.stringify({
+        result: fullResult.slice(0, 500),
+        artifactCount: artifacts.length,
+      }));
 
     } catch (err: any) {
       execution.status = 'failed';
@@ -406,6 +452,26 @@ Be thorough, precise, and report your progress for each task.`;
       content,
       timestamp: Date.now(),
     });
+  }
+
+  /**
+   * Respond to an interaction request within a mission agent execution.
+   */
+  respondToInteraction(executionId: string, requestId: string, response: any): boolean {
+    const key = `${executionId}:${requestId}`;
+    const resolver = this.pendingResolvers.get(key);
+    if (!resolver) return false;
+
+    resolver(response);
+    this.pendingResolvers.delete(key);
+    return true;
+  }
+
+  /**
+   * Get collected artifacts for a mission.
+   */
+  getMissionArtifacts(missionId: string): Artifact[] {
+    return this.missionArtifacts.get(missionId) || [];
   }
 
   getMissionStatus(missionId: string): MissionStatus | undefined {
