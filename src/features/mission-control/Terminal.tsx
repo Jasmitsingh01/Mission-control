@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Info,
   Loader2,
+  Bell,
+  FileText,
 } from "lucide-react";
 import type { TerminalEntry, LogLevel } from "@/hooks/useOpenClaw";
 
@@ -69,6 +71,18 @@ const LEVEL_CONFIG: Record<
     bg: "bg-purple-500/10",
     icon: <CheckCircle className="w-3 h-3" />,
     label: "RES",
+  },
+  interaction: {
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    icon: <Bell className="w-3 h-3" />,
+    label: "INPUT",
+  },
+  artifact: {
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+    icon: <FileText className="w-3 h-3" />,
+    label: "FILE",
   },
 };
 

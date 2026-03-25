@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   Loader2,
   Satellite,
+  Bell,
+  FileText,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { ConnectionStatus } from "@/hooks/useOpenClaw";
@@ -14,6 +16,7 @@ interface MissionHeaderProps {
   isStreaming: boolean;
   taskCount: number;
   agentCount: number;
+  pendingInteractionCount?: number;
 }
 
 export default function MissionHeader({
@@ -22,6 +25,7 @@ export default function MissionHeader({
   isStreaming,
   taskCount,
   agentCount,
+  pendingInteractionCount = 0,
 }: MissionHeaderProps) {
   const isConnected = status === "connected";
 
@@ -121,6 +125,24 @@ export default function MissionHeader({
             Agents
           </div>
         </div>
+        {pendingInteractionCount > 0 && (
+          <>
+            <div className="w-px h-8 bg-slate-800" />
+            <div className="text-center">
+              <motion.div
+                className="text-lg font-bold text-amber-400"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <Bell className="w-5 h-5 inline" />
+                {pendingInteractionCount}
+              </motion.div>
+              <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">
+                Waiting
+              </div>
+            </div>
+          </>
+        )}
         <div className="w-px h-8 bg-slate-800" />
         <div className="text-center">
           <motion.div

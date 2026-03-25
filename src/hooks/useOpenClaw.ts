@@ -38,7 +38,9 @@ export type LogLevel =
   | "info"
   | "success"
   | "tool_use"
-  | "tool_result";
+  | "tool_result"
+  | "interaction"
+  | "artifact";
 
 export interface TerminalEntry {
   id: string;

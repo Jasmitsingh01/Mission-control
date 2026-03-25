@@ -205,6 +205,13 @@ export const agentApi = {
     apiFetch(`/agents/${id}/heartbeat`, { method: 'POST', body: JSON.stringify(data || {}) }),
 }
 
+// Telegram Integration
+export const telegramApi = {
+  generateLinkCode: () => apiFetch('/telegram/generate-link-code', { method: 'POST' }),
+  status: () => apiFetch('/telegram/status'),
+  unlink: () => apiFetch('/telegram/unlink', { method: 'DELETE' }),
+}
+
 // Executions (Claude Code)
 export const executeApi = {
   start: (data: {
@@ -232,4 +239,12 @@ export const executeApi = {
   interactions: (id: string) => apiFetch(`/executions/${id}/interactions`),
 
   activeCount: () => apiFetch('/executions/active/count'),
+}
+
+// Telegram
+export const telegramApi = {
+  generateLinkCode: () =>
+    apiFetch('/telegram/generate-link-code', { method: 'POST' }),
+  status: () => apiFetch('/telegram/status'),
+  unlink: () => apiFetch('/telegram/unlink', { method: 'DELETE' }),
 }

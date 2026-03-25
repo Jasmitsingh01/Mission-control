@@ -167,6 +167,7 @@ export default function MissionControlPage() {
         isStreaming={isStreaming}
         taskCount={tasks.length}
         agentCount={activeWorkspace?.agents?.length || 0}
+        pendingInteractionCount={pendingInteractions.length}
       />
 
       {/* Main content */}

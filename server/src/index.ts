@@ -22,6 +22,8 @@ import taskStreamRoutes from './routes/taskStream';
 import agentRoutes from './routes/agents';
 import gatewayRoutes from './routes/gateways';
 import workspaceRoutes from './routes/workspaces';
+import telegramRoutes from './routes/telegram';
+import { initTelegramBot } from './services/telegramBot';
 import { setupWebSocket } from './services/wsHandler';
 import { openClawService } from './services/openclawService';
 import { WebSocketServer } from 'ws';
@@ -85,6 +87,12 @@ app.use('/api/streams', taskStreamRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/gateways', gatewayRoutes);
 app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/telegram', telegramRoutes);
+
+// Initialize Telegram bot (only if token is configured)
+if (process.env.TELEGRAM_BOT_TOKEN) {
+  initTelegramBot();
+}
 
 // Health check
 app.get('/api/health', async (_req, res) => {

@@ -16,6 +16,8 @@ export interface IUser extends Document {
   plan: 'free' | 'pro' | 'enterprise';
   settings: IUserSettings;
   currentOrgId?: string;
+  telegramChatId?: number | null;
+  telegramLinkedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
@@ -47,6 +49,8 @@ const userSchema = new Schema<IUser>(
       default: () => ({}),
     },
     currentOrgId: { type: String },
+    telegramChatId: { type: Number, default: null },
+    telegramLinkedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

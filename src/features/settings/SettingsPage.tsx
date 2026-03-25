@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { billingApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { Link } from 'react-router-dom'
+import { TelegramSettings } from './TelegramSettings'
 
 const planColors: Record<string, string> = {
   free: 'text-outline',
@@ -143,6 +144,9 @@ export function SettingsPage() {
           ))}
         </div>
       </div>
+
+      {/* Telegram */}
+      <TelegramSettings />
 
       {/* API Keys */}
       <div className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
