@@ -24,7 +24,7 @@ export function DashboardShell() {
         {/* Left: status indicators */}
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-secondary-container animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-secondary-container" />
             <span className="font-mono text-[10px] text-on-surface-variant">
               3 agents active
             </span>

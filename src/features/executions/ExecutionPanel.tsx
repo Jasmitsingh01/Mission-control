@@ -155,10 +155,10 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
         <div className="flex items-center gap-3">
           <div className={cn(
             'h-2.5 w-2.5 rounded-full',
-            isRunning && 'bg-green-400 animate-pulse',
+            isRunning && 'bg-green-400',
             isComplete && 'bg-green-400',
             isFailed && 'bg-error',
-            execution.status === 'queued' && 'bg-yellow-400 animate-pulse',
+            execution.status === 'queued' && 'bg-yellow-400',
           )} />
           <div>
             <p className="text-sm font-semibold text-on-surface">{execution.taskTitle}</p>
@@ -171,7 +171,7 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
         </div>
         <div className="flex items-center gap-2">
           {pendingInteractions.length > 0 && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[10px] font-bold animate-pulse">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[10px] font-bold">
               <Bell className="h-3 w-3" />
               {pendingInteractions.length} waiting
             </span>
@@ -237,7 +237,7 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
         {isRunning && (
           <div className="flex items-center gap-1.5 text-primary mt-2">
             <Loader2 className="h-3 w-3 animate-spin" />
-            <span className="animate-pulse">Working...</span>
+            <span>Working...</span>
           </div>
         )}
       </div>
@@ -327,7 +327,7 @@ function InteractionCard({ request, executionId }: { request: InteractionRequest
   return (
     <div className="my-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
       <div className="flex items-start gap-2">
-        <Bell className="h-4 w-4 text-amber-400 mt-0.5 shrink-0 animate-bounce" />
+        <Bell className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-amber-200">{request.title}</p>
           <p className="text-xs text-amber-300/70 mt-0.5">{request.description}</p>
@@ -482,7 +482,7 @@ function StreamLine({ event, executionId }: { event: StreamEvent; executionId: s
     try { parsed = JSON.parse(event.content) } catch { /* ignore */ }
     return (
       <div className="flex items-start gap-2 my-2 py-1.5 px-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
-        <Bell className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0 animate-pulse" />
+        <Bell className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
         <div>
           <span className="text-amber-400 font-bold text-xs">{parsed.title || 'Agent needs input'}</span>
           {parsed.description && (

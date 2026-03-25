@@ -24,7 +24,7 @@ import type { Agent, AgentStatus } from '@/stores/agentStore'
 import { useAgentStore } from '@/stores/agentStore'
 
 const statusConfig: Record<AgentStatus, { color: string; bg: string; label: string; dot: string; border: string }> = {
-  running: { color: 'text-secondary', bg: 'bg-secondary/10', label: 'Running', dot: 'bg-secondary animate-pulse', border: 'border-secondary/40' },
+  running: { color: 'text-secondary', bg: 'bg-secondary/10', label: 'Running', dot: 'bg-secondary', border: 'border-secondary/40' },
   idle: { color: 'text-on-surface-variant', bg: 'bg-surface-container-high', label: 'Idle', dot: 'bg-on-surface-variant', border: 'border-outline-variant/10' },
   paused: { color: 'text-tertiary', bg: 'bg-tertiary/10', label: 'Paused', dot: 'bg-tertiary', border: 'border-tertiary/30' },
   stopped: { color: 'text-outline', bg: 'bg-surface-container-high', label: 'Stopped', dot: 'bg-outline/50', border: 'border-outline-variant/10' },

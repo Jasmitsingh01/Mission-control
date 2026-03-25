@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Rocket, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 
 export function ResetPasswordPage() {
@@ -41,62 +40,55 @@ export function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 pt-16 bg-surface-dim">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary-container/10 rounded-full blur-[100px]" />
-      </div>
-
-      <motion.div
-        className="relative w-full max-w-md"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Rocket className="h-6 w-6 text-primary" />
-            <span className="text-xl font-black tracking-tighter text-on-surface">AgentForge</span>
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+              <span className="text-xs font-bold text-on-primary">AF</span>
+            </div>
+            <span className="text-lg font-bold tracking-tight text-on-surface">AgentForge</span>
           </Link>
-          <h1 className="text-3xl font-extrabold tracking-tight text-on-surface">New password</h1>
-          <p className="text-on-surface-variant mt-2">Choose a strong password for your account</p>
+          <h1 className="text-2xl font-bold tracking-tight text-on-surface">New password</h1>
+          <p className="text-on-surface-variant mt-2 text-sm">Choose a strong password for your account</p>
         </div>
 
-        <div className="glass-panel rounded-2xl border border-outline-variant/30 p-8">
+        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
           {!done ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <div className="rounded-xl bg-error/10 border border-error/20 px-4 py-3">
+                <div className="rounded-lg bg-error/10 border border-error/20 px-4 py-3">
                   <p className="text-sm text-error">{error}</p>
                 </div>
               )}
               <div>
-                <label className="text-sm font-medium mb-2 block text-on-surface font-mono">New Password</label>
+                <label className="text-sm font-medium mb-2 block text-on-surface">New Password</label>
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
                     placeholder="Min 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-container"
+                    className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                     autoFocus
                   />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline">
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block text-on-surface font-mono">Confirm Password</label>
+                <label className="text-sm font-medium mb-2 block text-on-surface">Confirm Password</label>
                 <input
                   type="password"
                   placeholder="Same as above"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-container"
+                  className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full synthetic-gradient text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
+                className="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
                 disabled={isLoading || !token}
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reset Password'}
@@ -107,8 +99,8 @@ export function ResetPasswordPage() {
             </form>
           ) : (
             <div className="text-center py-4 space-y-4">
-              <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-secondary/10 mb-2">
-                <CheckCircle2 className="h-8 w-8 text-secondary" />
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-secondary/10 mb-2">
+                <CheckCircle2 className="h-7 w-7 text-secondary" />
               </div>
               <h3 className="font-semibold text-on-surface">Password updated!</h3>
               <p className="text-sm text-on-surface-variant">Redirecting you to login in 3 seconds…</p>
@@ -121,7 +113,7 @@ export function ResetPasswordPage() {
             <Link to="/login" className="text-primary hover:underline font-medium">Back to login</Link>
           </p>
         )}
-      </motion.div>
+      </div>
     </div>
   )
 }
