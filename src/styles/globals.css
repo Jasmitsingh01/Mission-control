@@ -103,9 +103,9 @@
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
-/* Synthetic gradient utility */
+/* Primary solid utility */
 .synthetic-gradient {
-  background: linear-gradient(135deg, #7c3aed 0%, #0891b2 100%);
+  background: #6750a4;
 }
 
 /* Glass panel utility */

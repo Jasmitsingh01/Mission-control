@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { Rocket, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
@@ -29,17 +29,19 @@ export function PublicLayout() {
     <div className="min-h-screen bg-surface-dim">
       {/* Navbar */}
       <nav className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-200',
         scrolled
-          ? 'bg-white/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(103,80,164,0.1)] border-b border-outline-variant/20'
-          : 'bg-white/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(103,80,164,0.1)]'
+          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-outline-variant/20'
+          : 'bg-white/95 backdrop-blur-md'
       )}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <Rocket className="h-6 w-6 text-primary" />
-              <span className="text-xl font-black tracking-tighter text-on-surface">AgentForge</span>
+              <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+                <span className="text-xs font-bold text-on-primary">AF</span>
+              </div>
+              <span className="text-lg font-bold tracking-tight text-on-surface">AgentForge</span>
             </Link>
 
             {/* Desktop Nav */}
@@ -51,7 +53,7 @@ export function PublicLayout() {
                   className={cn(
                     'px-4 py-2 text-sm font-medium transition-colors',
                     location.pathname === link.to
-                      ? 'text-primary border-b-2 border-secondary pb-1'
+                      ? 'text-primary'
                       : 'text-on-surface-variant hover:text-on-surface'
                   )}
                 >
@@ -64,8 +66,7 @@ export function PublicLayout() {
             <div className="hidden md:flex items-center gap-3">
               {isAuthenticated ? (
                 <Link to="/dashboard">
-                  <button className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
-                    <Rocket className="h-4 w-4" />
+                  <button className="bg-primary text-on-primary px-5 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
                     Dashboard
                   </button>
                 </Link>
@@ -77,7 +78,7 @@ export function PublicLayout() {
                     </button>
                   </Link>
                   <Link to="/signup">
-                    <button className="bg-primary text-on-primary px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+                    <button className="bg-primary text-on-primary px-5 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
                       Sign Up
                     </button>
                   </Link>
@@ -94,7 +95,7 @@ export function PublicLayout() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-outline-variant/20 bg-white/95 backdrop-blur-xl">
+          <div className="md:hidden border-t border-outline-variant/20 bg-white">
             <div className="px-6 py-4 space-y-2">
               {navLinks.map((link) => (
                 <Link
@@ -103,7 +104,7 @@ export function PublicLayout() {
                   className={cn(
                     'block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors',
                     location.pathname === link.to
-                      ? 'text-primary bg-primary-container/20'
+                      ? 'text-primary bg-surface-container'
                       : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
                   )}
                 >
@@ -142,15 +143,17 @@ export function PublicLayout() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <Rocket className="h-5 w-5 text-primary" />
-                <span className="text-xl font-black tracking-tighter text-on-surface">AgentForge</span>
+                <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-on-primary">AF</span>
+                </div>
+                <span className="text-lg font-bold tracking-tight text-on-surface">AgentForge</span>
               </div>
               <p className="text-sm text-on-surface-variant leading-relaxed">
                 The AI agent orchestration platform that turns your ideas into reality.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-sm text-on-surface mb-4 font-mono uppercase tracking-wider text-xs">Platform</h4>
+              <h4 className="font-semibold text-xs text-on-surface mb-4 font-mono uppercase tracking-wider">Platform</h4>
               <ul className="space-y-2.5 text-sm text-on-surface-variant">
                 <li><Link to="/" className="hover:text-primary transition-colors">Features</Link></li>
                 <li><Link to="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
@@ -159,7 +162,7 @@ export function PublicLayout() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-sm text-on-surface mb-4 font-mono uppercase tracking-wider text-xs">Company</h4>
+              <h4 className="font-semibold text-xs text-on-surface mb-4 font-mono uppercase tracking-wider">Company</h4>
               <ul className="space-y-2.5 text-sm text-on-surface-variant">
                 <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
                 <li><Link to="/blog" className="hover:text-primary transition-colors">Blog</Link></li>
@@ -168,12 +171,12 @@ export function PublicLayout() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-sm text-on-surface mb-4 font-mono uppercase tracking-wider text-xs">Social</h4>
+              <h4 className="font-semibold text-xs text-on-surface mb-4 font-mono uppercase tracking-wider">Social</h4>
               <ul className="space-y-2.5 text-sm text-on-surface-variant">
-                <li><span className="hover:text-secondary cursor-pointer transition-colors">Twitter</span></li>
-                <li><span className="hover:text-secondary cursor-pointer transition-colors">GitHub</span></li>
-                <li><span className="hover:text-secondary cursor-pointer transition-colors">Discord</span></li>
-                <li><span className="hover:text-secondary cursor-pointer transition-colors">YouTube</span></li>
+                <li><span className="hover:text-on-surface cursor-pointer transition-colors">Twitter</span></li>
+                <li><span className="hover:text-on-surface cursor-pointer transition-colors">GitHub</span></li>
+                <li><span className="hover:text-on-surface cursor-pointer transition-colors">Discord</span></li>
+                <li><span className="hover:text-on-surface cursor-pointer transition-colors">YouTube</span></li>
               </ul>
             </div>
           </div>

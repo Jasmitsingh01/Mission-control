@@ -1,11 +1,9 @@
-import { motion } from "framer-motion";
 import {
   Radar,
   ArrowLeft,
   Loader2,
   Satellite,
   Bell,
-  FileText,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { ConnectionStatus } from "@/hooks/useOpenClaw";
@@ -42,44 +40,12 @@ export default function MissionHeader({
         </Link>
 
         <div className="flex items-center gap-3">
-          {/* Animated radar */}
+          {/* Status indicator */}
           <div className="relative w-10 h-10 flex items-center justify-center">
-            <motion.div
+            <div
               className={`absolute inset-0 rounded-full ${
                 isConnected ? "bg-emerald-500/10" : "bg-slate-500/10"
               }`}
-              animate={
-                isConnected
-                  ? {
-                      scale: [1, 1.6, 1],
-                      opacity: [0.3, 0, 0.3],
-                    }
-                  : {}
-              }
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
-            />
-            <motion.div
-              className={`absolute inset-1 rounded-full ${
-                isConnected ? "bg-emerald-500/15" : "bg-slate-500/10"
-              }`}
-              animate={
-                isConnected
-                  ? {
-                      scale: [1, 1.3, 1],
-                      opacity: [0.5, 0, 0.5],
-                    }
-                  : {}
-              }
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.3,
-              }}
             />
             <Radar
               className={`w-5 h-5 relative z-10 ${
@@ -89,17 +55,13 @@ export default function MissionHeader({
           </div>
 
           <div>
-            <h1 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <h1 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
               Mission Control
               {isStreaming && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-500/15 text-emerald-400 rounded-full"
-                >
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-500/15 text-emerald-400 rounded-full">
                   <Loader2 className="w-2.5 h-2.5 animate-spin" />
                   LIVE
-                </motion.span>
+                </span>
               )}
             </h1>
             <p className="text-xs text-slate-500 flex items-center gap-1.5">
@@ -113,14 +75,14 @@ export default function MissionHeader({
       {/* Right side stats */}
       <div className="flex items-center gap-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-200">{taskCount}</div>
+          <div className="text-lg font-semibold text-slate-200">{taskCount}</div>
           <div className="text-[10px] text-slate-500 uppercase tracking-wider">
             Tasks
           </div>
         </div>
         <div className="w-px h-8 bg-slate-800" />
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-200">{agentCount}</div>
+          <div className="text-lg font-semibold text-slate-200">{agentCount}</div>
           <div className="text-[10px] text-slate-500 uppercase tracking-wider">
             Agents
           </div>
@@ -129,14 +91,10 @@ export default function MissionHeader({
           <>
             <div className="w-px h-8 bg-slate-800" />
             <div className="text-center">
-              <motion.div
-                className="text-lg font-bold text-amber-400"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                <Bell className="w-5 h-5 inline" />
+              <div className="text-lg font-semibold text-amber-400">
+                <Bell className="w-4 h-4 inline mr-1" />
                 {pendingInteractionCount}
-              </motion.div>
+              </div>
               <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">
                 Waiting
               </div>
@@ -145,15 +103,13 @@ export default function MissionHeader({
         )}
         <div className="w-px h-8 bg-slate-800" />
         <div className="text-center">
-          <motion.div
-            className={`text-lg font-bold ${
+          <div
+            className={`text-sm font-semibold ${
               isConnected ? "text-emerald-400" : "text-slate-500"
             }`}
-            animate={isConnected ? { opacity: [1, 0.6, 1] } : {}}
-            transition={{ duration: 2, repeat: Infinity }}
           >
             {isConnected ? "ON" : "OFF"}
-          </motion.div>
+          </div>
           <div className="text-[10px] text-slate-500 uppercase tracking-wider">
             Link
           </div>

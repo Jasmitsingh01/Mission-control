@@ -1,14 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { CheckCircle2, Rocket, Zap, Building2, X, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { CheckCircle2, Zap, Building2, X, ChevronDown, ChevronUp, Loader2, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { billingApi } from '@/lib/api'
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } }),
-}
 
 const plans = [
   {
@@ -17,7 +11,7 @@ const plans = [
     priceAnnual: '$0',
     period: 'Free forever',
     desc: 'Perfect for individuals exploring AI agent orchestration.',
-    icon: Rocket,
+    icon: ArrowRight,
     popular: false,
     features: [
       'Up to 3 AI agents',
@@ -131,7 +125,6 @@ export function PricingPage() {
       return
     }
 
-    // For Pro plan: if logged in, redirect to Stripe Checkout; otherwise to signup
     if (!user) {
       navigate('/signup')
       return
@@ -159,60 +152,48 @@ export function PricingPage() {
     <div className="pt-24 pb-16 bg-surface-dim">
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 text-center py-16">
-        <motion.h1
-          className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-on-surface"
-          initial="hidden" animate="visible" variants={fadeUp} custom={0}
-        >
-          Simple Pricing.{' '}
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Powerful Agents.
-          </span>
-        </motion.h1>
-        <motion.p
-          className="mt-6 text-lg text-on-surface-variant max-w-xl mx-auto"
-          initial="hidden" animate="visible" variants={fadeUp} custom={1}
-        >
+        <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] text-on-surface">
+          Simple Pricing. <span className="text-primary">Powerful Agents.</span>
+        </h1>
+        <p className="mt-6 text-base text-on-surface-variant max-w-xl mx-auto">
           Start free, scale as you grow. No hidden fees, no surprises.
-        </motion.p>
+        </p>
 
         {/* Monthly/Annual toggle */}
-        <motion.div
-          className="mt-8 flex items-center justify-center gap-3"
-          initial="hidden" animate="visible" variants={fadeUp} custom={2}
-        >
+        <div className="mt-8 flex items-center justify-center gap-3">
           <span className={`text-sm font-medium ${!annual ? 'text-on-surface' : 'text-outline'}`}>Monthly</span>
           <button
             onClick={() => setAnnual(!annual)}
-            className={`relative w-14 h-7 rounded-full transition-colors ${annual ? 'bg-primary-container' : 'bg-surface-container-high'}`}
+            className={`relative w-14 h-7 rounded-full transition-colors ${annual ? 'bg-primary' : 'bg-surface-container-high'}`}
           >
-            <div className={`absolute top-0.5 h-6 w-6 rounded-full bg-on-surface transition-transform ${annual ? 'translate-x-7.5' : 'translate-x-0.5'}`} />
+            <div className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${annual ? 'translate-x-7.5' : 'translate-x-0.5'}`} />
           </button>
           <span className={`text-sm font-medium ${annual ? 'text-on-surface' : 'text-outline'}`}>Annual</span>
-          {annual && <span className="text-xs font-mono text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Save 17%</span>}
-        </motion.div>
+          {annual && <span className="text-xs font-medium text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Save 17%</span>}
+        </div>
       </section>
 
       {/* Plans */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 mb-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans.map((plan, i) => (
-            <motion.div key={plan.name} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-              <div className={`h-full relative rounded-2xl border p-8 ${
+          {plans.map((plan) => (
+            <div key={plan.name}>
+              <div className={`h-full relative rounded-xl border p-8 ${
                 plan.popular
-                  ? 'border-primary-container bg-surface-container-low shadow-lg shadow-primary-container/10'
-                  : 'border-outline-variant/30 bg-surface-container-low'
+                  ? 'border-primary bg-white shadow-sm'
+                  : 'border-outline-variant/30 bg-white'
               }`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="synthetic-gradient text-white text-xs font-semibold px-4 py-1 rounded-full">Most Popular</span>
+                    <span className="bg-primary text-on-primary text-xs font-semibold px-4 py-1 rounded-full">Most Popular</span>
                   </div>
                 )}
-                <div className="inline-flex rounded-xl bg-primary-container/20 p-2.5 mb-4">
+                <div className="inline-flex rounded-lg bg-surface-container p-2.5 mb-4">
                   <plan.icon className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-on-surface">{plan.name}</h3>
+                <h3 className="text-lg font-semibold text-on-surface">{plan.name}</h3>
                 <div className="mt-3 mb-3">
-                  <span className="text-4xl font-extrabold text-on-surface font-mono">
+                  <span className="text-3xl font-bold text-on-surface font-mono">
                     {annual ? plan.priceAnnual : plan.price}
                   </span>
                   <span className="text-on-surface-variant text-sm">{plan.period}</span>
@@ -222,9 +203,9 @@ export function PricingPage() {
                 <button
                   onClick={() => handlePlanSelect(plan.name)}
                   disabled={checkoutLoading === plan.name.toLowerCase()}
-                  className={`w-full py-3 rounded-xl text-sm font-semibold mb-6 transition-all disabled:opacity-50 ${
+                  className={`w-full py-3 rounded-lg text-sm font-semibold mb-6 transition-colors disabled:opacity-50 ${
                     plan.popular
-                      ? 'synthetic-gradient text-white hover:opacity-90 shadow-lg shadow-primary-container/20'
+                      ? 'bg-primary text-on-primary hover:bg-primary/90'
                       : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container'
                   }`}
                 >
@@ -244,18 +225,18 @@ export function PricingPage() {
                   ))}
                 </ul>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
       {/* Feature Comparison Table */}
       <section className="max-w-5xl mx-auto px-6 lg:px-8 mb-20">
-        <motion.div className="text-center mb-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
-          <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">Feature Comparison</h2>
-        </motion.div>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl font-bold tracking-tight text-on-surface">Feature Comparison</h2>
+        </div>
 
-        <div className="glass-panel rounded-2xl border border-outline-variant/30 overflow-hidden">
+        <div className="bg-white rounded-xl border border-outline-variant/30 overflow-hidden">
           {/* Table header */}
           <div className="grid grid-cols-4 gap-4 px-6 py-4 border-b border-outline-variant/20 bg-surface-container">
             <div className="text-sm font-semibold text-on-surface">Feature</div>
@@ -292,23 +273,19 @@ export function PricingPage() {
 
       {/* FAQ */}
       <section className="max-w-4xl mx-auto px-6 lg:px-8 mb-20">
-        <motion.div className="text-center mb-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
-          <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">Frequently Asked Questions</h2>
-        </motion.div>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl font-bold tracking-tight text-on-surface">Frequently Asked Questions</h2>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {faqs.map((faq, i) => (
-            <motion.div
-              key={faq.q}
-              initial="hidden" whileInView="visible" viewport={{ once: true }}
-              variants={fadeUp} custom={i}
-            >
+            <div key={faq.q}>
               <div
-                className="glass-panel rounded-xl border border-outline-variant/30 p-5 cursor-pointer hover:border-primary/20 transition-colors"
+                className="bg-white rounded-xl border border-outline-variant/30 p-5 cursor-pointer hover:border-primary/20 transition-colors"
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-semibold text-sm text-on-surface">{faq.q}</h3>
+                  <h3 className="font-medium text-sm text-on-surface">{faq.q}</h3>
                   {openFaq === i ? (
                     <ChevronUp className="h-4 w-4 text-outline shrink-0 mt-0.5" />
                   ) : (
@@ -316,46 +293,39 @@ export function PricingPage() {
                   )}
                 </div>
                 {openFaq === i && (
-                  <motion.p
-                    className="text-sm text-on-surface-variant leading-relaxed mt-3"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    transition={{ duration: 0.2 }}
-                  >
+                  <p className="text-sm text-on-surface-variant leading-relaxed mt-3">
                     {faq.a}
-                  </motion.p>
+                  </p>
                 )}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
       {/* CTA Banner */}
       <section className="max-w-4xl mx-auto px-6 lg:px-8">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
-          <div className="synthetic-gradient rounded-2xl p-12 text-center">
-            <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
-              Start building with AgentForge today
-            </h2>
-            <p className="mt-4 text-white/80 max-w-lg mx-auto">
-              No credit card required. Deploy your first agent team in under 2 minutes.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/signup">
-                <button className="bg-white text-primary px-8 py-3 rounded-xl text-sm font-semibold hover:bg-white/90 transition-colors flex items-center gap-2">
-                  <Rocket className="h-4 w-4" />
-                  Get Started Free
-                </button>
-              </Link>
-              <Link to="/contact">
-                <button className="border border-white/30 text-white px-8 py-3 rounded-xl text-sm font-medium hover:bg-white/10 transition-colors">
-                  Talk to Sales
-                </button>
-              </Link>
-            </div>
+        <div className="bg-primary rounded-xl p-12 text-center">
+          <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">
+            Start building with AgentForge today
+          </h2>
+          <p className="mt-4 text-white/80 max-w-lg mx-auto text-sm">
+            No credit card required. Deploy your first agent team in under 2 minutes.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link to="/signup">
+              <button className="bg-white text-primary px-8 py-3 rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors flex items-center gap-2">
+                Get Started Free
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </Link>
+            <Link to="/contact">
+              <button className="border border-white/30 text-white px-8 py-3 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors">
+                Talk to Sales
+              </button>
+            </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
     </div>
   )

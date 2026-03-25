@@ -91,7 +91,7 @@ export function Sidebar() {
       {/* Bottom */}
       <div className="border-t border-outline-variant/20 px-3 py-4 space-y-2">
         {!sidebarCollapsed && (
-          <button className="flex w-full items-center justify-center gap-2 rounded-lg synthetic-gradient px-4 py-2.5 text-white font-bold text-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+          <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-on-primary font-semibold text-sm transition-colors hover:bg-primary/90">
             <Plus className="h-4 w-4" />
             New Team
           </button>
@@ -99,7 +99,7 @@ export function Sidebar() {
         {sidebarCollapsed && (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <button className="flex w-full items-center justify-center rounded-lg synthetic-gradient p-2.5 text-white font-bold transition-all hover:opacity-90">
+              <button className="flex w-full items-center justify-center rounded-lg bg-primary p-2.5 text-on-primary font-semibold transition-colors hover:bg-primary/90">
                 <Plus className="h-4 w-4" />
               </button>
             </TooltipTrigger>
@@ -145,10 +145,10 @@ function SidebarLink({
           danger
             ? isActive
               ? 'text-error bg-error/10 border-r-2 border-error rounded-l-lg'
-              : 'text-error/70 hover:bg-error/10 hover:translate-x-1 rounded-lg'
+              : 'text-error/70 hover:bg-error/10 rounded-lg'
             : isActive
             ? 'text-secondary bg-surface-container-low border-r-2 border-secondary rounded-l-lg'
-            : 'text-on-surface-variant hover:bg-surface-container-low/50 hover:translate-x-1 rounded-lg'
+            : 'text-on-surface-variant hover:bg-surface-container-low/50 rounded-lg'
         )
       }
     >

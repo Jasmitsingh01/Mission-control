@@ -18,15 +18,15 @@ export function KanbanPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all flex items-center gap-2">
-            <Filter className="h-3.5 w-3.5" />
+          <button className="text-sm font-medium px-4 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors flex items-center gap-2">
+            <Filter className="h-4 w-4" />
             Filter
           </button>
           <button
             onClick={() => setCreateOpen(true)}
-            className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-4 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
+            className="bg-primary text-on-primary text-sm font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary/90 transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4" />
             New Task
           </button>
         </div>

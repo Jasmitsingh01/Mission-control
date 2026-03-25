@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Rocket, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
 const benefits = [
@@ -31,64 +30,57 @@ export function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 pt-16 bg-surface-dim">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary-container/10 rounded-full blur-[100px]" />
-      </div>
-
-      <motion.div
-        className="relative w-full max-w-md"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Rocket className="h-6 w-6 text-primary" />
-            <span className="text-xl font-black tracking-tighter text-on-surface">AgentForge</span>
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+              <span className="text-xs font-bold text-on-primary">AF</span>
+            </div>
+            <span className="text-lg font-bold tracking-tight text-on-surface">AgentForge</span>
           </Link>
-          <h1 className="text-3xl font-extrabold tracking-tight text-on-surface">Create your account</h1>
-          <p className="text-on-surface-variant mt-2">Start orchestrating AI agents in minutes</p>
+          <h1 className="text-2xl font-bold tracking-tight text-on-surface">Create your account</h1>
+          <p className="text-on-surface-variant mt-2 text-sm">Start orchestrating AI agents in minutes</p>
         </div>
 
-        <div className="glass-panel rounded-2xl border border-outline-variant/30 p-8">
+        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="rounded-xl bg-error/10 border border-error/20 px-4 py-3">
+              <div className="rounded-lg bg-error/10 border border-error/20 px-4 py-3">
                 <p className="text-sm text-error">{error}</p>
               </div>
             )}
 
             <div>
-              <label className="text-sm font-medium mb-2 block text-on-surface font-mono">Full Name</label>
+              <label className="text-sm font-medium mb-2 block text-on-surface">Full Name</label>
               <input
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-transparent transition-all"
+                className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block text-on-surface font-mono">Email</label>
+              <label className="text-sm font-medium mb-2 block text-on-surface">Email</label>
               <input
                 type="email"
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-transparent transition-all"
+                className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block text-on-surface font-mono">Password</label>
+              <label className="text-sm font-medium mb-2 block text-on-surface">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Min 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-transparent transition-all"
+                  className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline border border-outline-variant/30 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -108,16 +100,13 @@ export function SignupPage() {
 
             <button
               type="submit"
-              className="w-full synthetic-gradient text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
               disabled={isLoading}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Rocket className="h-4 w-4" />
-                  Create Account
-                </>
+                'Create Account'
               )}
             </button>
           </form>
@@ -127,7 +116,7 @@ export function SignupPage() {
           Already have an account?{' '}
           <Link to="/login" className="text-primary hover:underline font-medium">Log in</Link>
         </p>
-      </motion.div>
+      </div>
     </div>
   )
 }

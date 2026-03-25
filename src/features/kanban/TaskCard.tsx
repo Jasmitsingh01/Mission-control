@@ -44,7 +44,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       style={style}
       className={cn(
         'group rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-pointer',
-        isDragging && 'opacity-50 shadow-lg rotate-2 scale-105'
+        isDragging && 'opacity-50 shadow-md'
       )}
       onClick={onClick}
     >
@@ -111,7 +111,7 @@ export function TaskCardOverlay({ task }: { task: Task }) {
   const PriorityIcon = priorityConfig[task.priority].icon
 
   return (
-    <div className="w-64 rounded-lg border border-primary/50 bg-card p-3 shadow-xl rotate-3 scale-105">
+    <div className="w-64 rounded-lg border border-primary/30 bg-card p-3 shadow-md">
       <div className="flex items-center gap-2 mb-2">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
         <PriorityIcon className={cn('h-3.5 w-3.5', priorityConfig[task.priority].color)} />

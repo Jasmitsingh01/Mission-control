@@ -176,7 +176,7 @@ export function MissionLauncherPage() {
             <div className={cn(
               "h-10 w-10 rounded-full flex items-center justify-center font-mono text-sm font-bold border-2 transition-all",
               i <= stepIndex
-                ? 'synthetic-gradient border-transparent text-white shadow-[0_0_20px_rgba(103,80,164,0.3)]'
+                ? 'synthetic-gradient border-transparent text-white '
                 : 'border-outline-variant/30 text-outline bg-surface-container'
             )}>
               {step === 'done' || (i < stepIndex) ? <CheckCircle2 className="h-5 w-5" /> : num}
@@ -217,7 +217,7 @@ export function MissionLauncherPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={6}
-                    className="w-full rounded-xl border border-outline-variant/20 bg-surface-container-lowest px-4 py-3 text-sm leading-relaxed text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 focus:shadow-[0_0_30px_rgba(103,80,164,0.1)] resize-none transition-all"
+                    className="w-full rounded-xl border border-outline-variant/20 bg-surface-container-lowest px-4 py-3 text-sm leading-relaxed text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10  resize-none transition-all"
                   />
                 </div>
                 <p className="font-mono text-[10px] text-outline mt-2">
@@ -277,7 +277,7 @@ export function MissionLauncherPage() {
               <button
                 disabled={!description.trim()}
                 onClick={handleGenerate}
-                className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(103,80,164,0.2)]"
+                className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed "
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Launch Team
@@ -294,9 +294,8 @@ export function MissionLauncherPage() {
           <div className="flex flex-col items-center justify-center">
             <div className="relative">
               <Loader2 className="h-12 w-12 text-primary animate-spin" />
-              <Sparkles className="h-5 w-5 text-secondary absolute -top-1 -right-1 animate-pulse" />
             </div>
-            <p className="text-sm text-on-surface-variant mt-4 animate-pulse">
+            <p className="text-sm text-on-surface-variant mt-4">
               AI is analyzing your requirements...
             </p>
             <p className="font-mono text-[10px] text-outline mt-2">
@@ -332,7 +331,7 @@ export function MissionLauncherPage() {
             </button>
             <button
               onClick={handleLaunch}
-              className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-[0_0_20px_rgba(103,80,164,0.2)]"
+              className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity "
             >
               <Rocket className="h-3.5 w-3.5" />
               Launch Mission
@@ -345,7 +344,7 @@ export function MissionLauncherPage() {
       {step === 'launching' && (
         <div className="bg-surface-container-low rounded-xl border border-outline-variant/10 p-16">
           <div className="flex flex-col items-center justify-center">
-            <Rocket className="h-12 w-12 text-primary animate-bounce" />
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
             <p className="text-lg font-semibold text-on-surface mt-4">Deploying agents and tasks...</p>
             <div className="w-64 mt-6">
               <div className="h-1.5 rounded-full bg-surface-container-lowest overflow-hidden">
@@ -392,7 +391,7 @@ export function MissionLauncherPage() {
             if (totalPending === 0) return null
             return (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
-                <Bell className="h-5 w-5 text-amber-400 animate-bounce" />
+                <Bell className="h-5 w-5 text-amber-400" />
                 <div>
                   <p className="text-sm font-semibold text-amber-200">
                     {totalPending} agent{totalPending !== 1 ? 's need' : ' needs'} your input

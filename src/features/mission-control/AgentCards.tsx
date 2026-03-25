@@ -1,20 +1,19 @@
-import { motion } from "framer-motion";
 import { Bot, Zap, Crown, Radio, Clock } from "lucide-react";
 import type { MCAgent } from "@/stores/missionControlStore";
 
-const GRADIENT_PALETTES = [
-  "from-violet-500 to-purple-600",
-  "from-cyan-500 to-blue-600",
-  "from-emerald-500 to-teal-600",
-  "from-amber-500 to-orange-600",
-  "from-rose-500 to-pink-600",
-  "from-indigo-500 to-blue-700",
-  "from-lime-500 to-green-600",
-  "from-fuchsia-500 to-purple-700",
+const AGENT_COLORS = [
+  "bg-violet-600",
+  "bg-cyan-600",
+  "bg-emerald-600",
+  "bg-amber-600",
+  "bg-rose-600",
+  "bg-indigo-600",
+  "bg-lime-600",
+  "bg-fuchsia-600",
 ];
 
-function getGradient(index: number) {
-  return GRADIENT_PALETTES[index % GRADIENT_PALETTES.length];
+function getColor(index: number) {
+  return AGENT_COLORS[index % AGENT_COLORS.length];
 }
 
 function getStatusColor(status?: string) {
@@ -64,17 +63,14 @@ export default function AgentCards({ agents }: AgentCardsProps) {
 
       <div className="space-y-2">
         {agents.map((agent, idx) => (
-          <motion.div
+          <div
             key={agent._id || agent.name}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.05 }}
             className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50 transition-colors"
           >
             {/* Avatar */}
             <div className="relative shrink-0">
               <div
-                className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getGradient(idx)} flex items-center justify-center text-white text-xs font-bold shadow-lg`}
+                className={`w-8 h-8 rounded-lg ${getColor(idx)} flex items-center justify-center text-white text-xs font-semibold`}
               >
                 {agent.name.charAt(0).toUpperCase()}
               </div>
@@ -129,7 +125,7 @@ export default function AgentCards({ agents }: AgentCardsProps) {
                 })}
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>

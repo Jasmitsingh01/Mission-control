@@ -75,16 +75,15 @@ export function DashboardPage() {
       {isEmpty && (
         <div className="bg-surface-container-low rounded-xl border border-outline-variant/10 p-8">
           <div className="flex flex-col items-center text-center">
-            <div className="rounded-full bg-primary-container/20 p-5 mb-5">
-              <Rocket className="h-10 w-10 text-primary" />
+            <div className="rounded-full bg-surface-container p-5 mb-5">
+              <Rocket className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-on-surface mb-3">Launch Your First Mission</h2>
+            <h2 className="text-xl font-semibold text-on-surface mb-3">Launch Your First Mission</h2>
             <p className="text-sm text-on-surface-variant max-w-lg mb-8 leading-relaxed">
               Describe what you want to build and Mission Control will assemble the perfect AI agent team, break down tasks, and assign work automatically.
             </p>
             <Link to="/dashboard/mission">
-              <button className="synthetic-gradient text-white font-mono uppercase tracking-widest text-[10px] font-bold px-8 py-3 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
-                <Rocket className="h-4 w-4" />
+              <button className="bg-primary text-on-primary text-sm font-semibold px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-primary/90 transition-colors">
                 Launch Mission
               </button>
             </Link>
@@ -165,7 +164,7 @@ export function DashboardPage() {
                 {agents.map((agent) => (
                   <div key={agent.id} className="flex items-center gap-3 bg-surface-container p-3 rounded-lg group hover:bg-surface-container-high transition-colors">
                     <div className={`h-2 w-2 rounded-full shrink-0 ${
-                      agent.status === 'running' ? 'bg-green-400 animate-pulse shadow-[0_0_6px_rgba(74,222,128,0.4)]'
+                      agent.status === 'running' ? 'bg-green-500'
                       : agent.status === 'error' ? 'bg-error'
                       : 'bg-outline'
                     }`} />

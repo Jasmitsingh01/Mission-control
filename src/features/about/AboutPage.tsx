@@ -1,15 +1,4 @@
-import { motion } from 'framer-motion'
 import { Target, Users, Lightbulb, Heart, Code2, Globe, Zap, Shield } from 'lucide-react'
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } }),
-}
-
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.8 } },
-}
 
 const values = [
   { icon: Lightbulb, title: 'Innovation First', desc: 'We push the boundaries of what AI orchestration can do, constantly evolving our platform.' },
@@ -36,34 +25,26 @@ export function AboutPage() {
     <div className="pt-24 pb-16 bg-surface-dim">
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 text-center py-16">
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-          <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 inline-block bg-secondary/10 px-3 py-1 rounded-full">About Us</span>
-        </motion.div>
-        <motion.h1
-          className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-on-surface mt-4"
-          initial="hidden" animate="visible" variants={fadeUp} custom={1}
-        >
+        <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 inline-block bg-secondary/10 px-3 py-1 rounded-full">About Us</span>
+        <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] text-on-surface mt-4">
           Building the future of
           <br /><span className="text-primary">AI orchestration</span>
-        </motion.h1>
-        <motion.p
-          className="mt-6 text-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed"
-          initial="hidden" animate="visible" variants={fadeUp} custom={2}
-        >
+        </h1>
+        <p className="mt-6 text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
           AgentForge was born from the frustration of managing multiple AI agents across
           different terminals and tools. We built the command center we wished existed.
-        </motion.p>
+        </p>
       </section>
 
       {/* Mission */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+          <div>
             <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 inline-block">Our Mission</span>
-            <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-on-surface">
+            <h2 className="text-2xl font-bold tracking-tight mb-4 text-on-surface">
               Make AI agents as manageable as human teams
             </h2>
-            <p className="text-on-surface-variant leading-relaxed mb-6">
+            <p className="text-on-surface-variant leading-relaxed mb-6 text-sm">
               We believe the future of software development involves coordinating teams of AI agents,
               each with specialized skills and responsibilities. AgentForge provides the infrastructure
               to make that vision practical today.
@@ -75,17 +56,14 @@ export function AboutPage() {
                 { icon: Zap, label: 'Real-time' },
                 { icon: Target, label: 'Task-Focused' },
               ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3 rounded-xl border border-outline-variant/30 bg-surface-container-low p-3 hover:border-primary/30 transition-colors">
-                  <item.icon className="h-5 w-5 text-primary shrink-0" />
+                <div key={item.label} className="flex items-center gap-3 rounded-lg border border-outline-variant/30 bg-white p-3">
+                  <item.icon className="h-4 w-4 text-primary shrink-0" />
                   <span className="text-sm font-medium text-on-surface">{item.label}</span>
                 </div>
               ))}
             </div>
-          </motion.div>
-          <motion.div
-            className="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-8"
-            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
-          >
+          </div>
+          <div className="rounded-xl border border-outline-variant/30 bg-white p-8">
             <div className="grid grid-cols-2 gap-6 text-center">
               {[
                 { value: '10+', label: 'AI Models' },
@@ -94,33 +72,33 @@ export function AboutPage() {
                 { value: '24/7', label: 'Agent Uptime' },
               ].map((stat) => (
                 <div key={stat.label}>
-                  <p className="text-3xl font-extrabold text-primary font-mono">{stat.value}</p>
-                  <p className="text-sm text-on-surface-variant mt-1 font-mono">{stat.label}</p>
+                  <p className="text-2xl font-bold text-on-surface font-mono">{stat.value}</p>
+                  <p className="text-sm text-on-surface-variant mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Values */}
       <section className="py-20 bg-surface-container-lowest border-y border-outline-variant/20">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <motion.div className="text-center mb-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+          <div className="text-center mb-12">
             <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 block">Our Values</span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">What drives us</h2>
-          </motion.div>
+            <h2 className="text-2xl font-bold tracking-tight text-on-surface">What drives us</h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((v, i) => (
-              <motion.div key={v.title} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-                <div className="h-full text-center glass-panel rounded-2xl border border-outline-variant/30 p-8 hover:border-primary/30 transition-colors">
-                  <div className="inline-flex rounded-xl bg-primary-container/20 p-3 mb-4">
-                    <v.icon className="h-6 w-6 text-primary" />
+            {values.map((v) => (
+              <div key={v.title}>
+                <div className="h-full text-center bg-white rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
+                  <div className="inline-flex rounded-lg bg-surface-container p-2.5 mb-4">
+                    <v.icon className="h-5 w-5 text-primary" />
                   </div>
                   <h3 className="font-semibold mb-2 text-on-surface">{v.title}</h3>
                   <p className="text-sm text-on-surface-variant leading-relaxed">{v.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -128,22 +106,22 @@ export function AboutPage() {
 
       {/* Team */}
       <section className="py-20 max-w-7xl mx-auto px-6 lg:px-8">
-        <motion.div className="text-center mb-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+        <div className="text-center mb-12">
           <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 block">Team</span>
-          <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">The people behind AgentForge</h2>
-        </motion.div>
+          <h2 className="text-2xl font-bold tracking-tight text-on-surface">The people behind AgentForge</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {team.map((t, i) => (
-            <motion.div key={t.name} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-              <div className="text-center glass-panel rounded-2xl border border-outline-variant/30 p-8 hover:border-primary/30 transition-colors">
-                <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary-container/20 text-primary font-bold text-xl font-mono mb-4">
+          {team.map((t) => (
+            <div key={t.name}>
+              <div className="text-center bg-white rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-surface-container text-primary font-semibold text-lg font-mono mb-4">
                   {t.avatar}
                 </div>
-                <h3 className="font-semibold text-lg text-on-surface">{t.name}</h3>
+                <h3 className="font-semibold text-base text-on-surface">{t.name}</h3>
                 <p className="text-sm text-secondary mb-3 font-mono">{t.role}</p>
                 <p className="text-sm text-on-surface-variant leading-relaxed">{t.desc}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -151,30 +129,25 @@ export function AboutPage() {
       {/* Timeline */}
       <section className="py-20 bg-surface-container-lowest border-y border-outline-variant/20">
         <div className="max-w-3xl mx-auto px-6 lg:px-8">
-          <motion.div className="text-center mb-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+          <div className="text-center mb-12">
             <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 block">Journey</span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">Our story so far</h2>
-          </motion.div>
+            <h2 className="text-2xl font-bold tracking-tight text-on-surface">Our story so far</h2>
+          </div>
           <div className="space-y-8">
             {milestones.map((m, i) => (
-              <motion.div
-                key={m.year}
-                className="flex gap-6"
-                initial="hidden" whileInView="visible" viewport={{ once: true }}
-                variants={fadeUp} custom={i}
-              >
+              <div key={m.year} className="flex gap-6">
                 <div className="flex flex-col items-center">
-                  <div className="h-10 w-10 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0 border border-primary-container/30">
-                    <div className="h-3 w-3 rounded-full bg-primary" />
+                  <div className="h-8 w-8 rounded-full bg-surface-container flex items-center justify-center shrink-0 border border-outline-variant/30">
+                    <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                   </div>
                   {i < milestones.length - 1 && <div className="w-px flex-1 bg-outline-variant/30 mt-2" />}
                 </div>
                 <div className="pb-8">
-                  <p className="text-xs font-bold text-secondary mb-1 font-mono tracking-wider">{m.year}</p>
-                  <h3 className="font-semibold text-lg text-on-surface">{m.title}</h3>
+                  <p className="text-xs font-semibold text-secondary mb-1 font-mono tracking-wider">{m.year}</p>
+                  <h3 className="font-semibold text-base text-on-surface">{m.title}</h3>
                   <p className="text-sm text-on-surface-variant mt-1">{m.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
