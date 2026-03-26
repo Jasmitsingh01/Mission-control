@@ -36,6 +36,7 @@ export interface OpenClawRequest {
   model?: string;
   maxTokens?: number;
   stream?: boolean;
+  userId?: string;
 }
 
 export interface OpenClawChoice {
@@ -54,12 +55,15 @@ export interface OpenClawResponse {
  * Send a non-streaming chat completion to OpenClaw gateway.
  */
 export async function openclawChat(req: OpenClawRequest): Promise<OpenClawResponse> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${OPENCLAW_TOKEN}`,
+  };
+  if (req.userId) headers['X-User-Id'] = req.userId;
+
   const res = await fetch(`${OPENCLAW_URL}/v1/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENCLAW_TOKEN}`,
-    },
+    headers,
     body: JSON.stringify({
       model: req.model || 'openclaw:main',
       messages: req.messages,
@@ -84,12 +88,15 @@ export async function* openclawStream(req: OpenClawRequest): AsyncGenerator<{
   type: 'delta' | 'done' | 'error' | 'interaction_request' | 'artifact';
   content: string;
 }> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${OPENCLAW_TOKEN}`,
+  };
+  if (req.userId) headers['X-User-Id'] = req.userId;
+
   const res = await fetch(`${OPENCLAW_URL}/v1/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENCLAW_TOKEN}`,
-    },
+    headers,
     body: JSON.stringify({
       model: req.model || 'openclaw:main',
       messages: req.messages,
@@ -222,11 +229,19 @@ export async function openclawRespond(requestId: string, response: any): Promise
 
 /**
  * Check if the OpenClaw gateway is reachable.
+ * Uses a WebSocket connection test since the gateway is WS-based.
  */
 export async function openclawHealthCheck(): Promise<boolean> {
   try {
-    const res = await fetch(`${OPENCLAW_URL}/`, { method: 'GET' });
-    return res.ok;
+    const WebSocket = (await import('ws')).default;
+    const wsUrl = OPENCLAW_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+    return new Promise<boolean>((resolve) => {
+      const ws = new WebSocket(wsUrl, { headers: { Origin: OPENCLAW_URL }, handshakeTimeout: 3000 });
+      const timer = setTimeout(() => { ws.close(); resolve(false); }, 3000);
+      ws.on('open', () => { clearTimeout(timer); ws.close(); resolve(true); });
+      ws.on('message', () => { clearTimeout(timer); ws.close(); resolve(true); });
+      ws.on('error', () => { clearTimeout(timer); resolve(false); });
+    });
   } catch {
     return false;
   }

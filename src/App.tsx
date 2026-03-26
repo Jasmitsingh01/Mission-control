@@ -50,13 +50,11 @@ export default function App() {
             <Route path="contact" element={<ContactPage />} />
           </Route>
 
-          {/* Auth pages (public layout) */}
-          <Route element={<PublicLayout />}>
-            <Route path="login" element={<LoginPage />} />
-            <Route path="signup" element={<SignupPage />} />
-            <Route path="forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="reset-password" element={<ResetPasswordPage />} />
-          </Route>
+          {/* Auth pages (no header/footer) */}
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
 
           {/* Invitation accept */}
           <Route path="invite/:token" element={<AcceptInvitePage />} />

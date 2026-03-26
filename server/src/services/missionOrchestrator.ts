@@ -10,18 +10,23 @@ import { notifyMissionComplete } from './notifier';
  * When an agent has a skill, it tells OpenClaw to use those tools.
  */
 const SKILL_TO_TOOLS: Record<string, string[]> = {
-  'web-search': ['web_search', 'web_fetch'],
-  'code-analysis': ['read', 'glob', 'grep'],
+  'web-search': ['web_search', 'web_fetch', 'browser'],
+  'web-browsing': ['browser', 'web_fetch', 'web_search'],
+  'research': ['web_search', 'web_fetch', 'browser', 'read', 'write'],
+  'code-analysis': ['read', 'glob', 'grep', 'shell'],
   'git-operations': ['shell (git *)'],
-  'test-runner': ['shell (npm test *)', 'shell (npx jest *)'],
+  'test-runner': ['shell (npm test *)', 'shell (npx jest *)', 'shell (npx vitest *)', 'shell (python -m pytest *)'],
+  'testing': ['shell', 'browser', 'web_fetch', 'read', 'write'],
   'doc-generator': ['write', 'read'],
-  'database-query': ['shell (mongo *)', 'shell (psql *)'],
+  'database-query': ['shell (mongo *)', 'shell (psql *)', 'shell (sqlite3 *)'],
   'csv-json-parser': ['read', 'write', 'shell (jq *)'],
   'slack-integration': ['slack'],
   'email-sender': ['shell (mail *)'],
-  'image-analysis': ['read'],
+  'image-analysis': ['read', 'browser'],
   'cron-scheduler': ['shell (crontab *)'],
-  'api-client': ['shell (curl *)', 'web_fetch'],
+  'api-client': ['shell (curl *)', 'web_fetch', 'shell'],
+  'browser': ['browser', 'web_fetch'],
+  'automation': ['shell', 'browser', 'web_fetch', 'web_search', 'read', 'write'],
 };
 
 export interface AgentPlan {
@@ -149,7 +154,10 @@ ${taskList}
 - Complete each task thoroughly before moving to the next
 - Report what you did for each task
 - If a task fails, report the error and continue to the next task
-- Use the appropriate tools for each task (read files, write code, run commands, etc.)`;
+- Use the appropriate tools for each task (read files, write code, run commands, etc.)
+- You have access to: web search, web browsing, file system, shell commands, and code tools
+- For research tasks: use web_search to find information, browser to visit pages, web_fetch to get page content
+- For testing tasks: use shell to run tests, browser to test UIs, web_fetch to test APIs`;
 
       // Build system prompt with agent persona + skills context
       const skillsList = agent.skills.length > 0
@@ -199,7 +207,7 @@ Be thorough, precise, and report your progress for each task.`;
     // Launch all agent executions in parallel
     for (const agentExec of agentExecutions) {
       const agent = req.plan.agents.find((a) => a.role === agentExec.agentRole)!;
-      this.executeAgent(missionId, agentExec, agent).catch((err) => {
+      this.executeAgent(missionId, agentExec, agent, req.userId).catch((err) => {
         console.error(`[Mission] Agent ${agentExec.agentName} failed:`, err.message);
       });
     }
@@ -237,7 +245,8 @@ Be thorough, precise, and report your progress for each task.`;
   private async executeAgent(
     missionId: string,
     agentExec: AgentExecution,
-    agent: AgentPlan
+    agent: AgentPlan,
+    userId?: string
   ): Promise<void> {
     const execution = await Execution.findById(agentExec.executionId);
     if (!execution) return;
@@ -261,7 +270,7 @@ Be thorough, precise, and report your progress for each task.`;
       let fullResult = '';
       const artifacts: Artifact[] = [];
 
-      for await (const chunk of openclawStream({ messages, maxTokens: agent.maxTokens || 4096 })) {
+      for await (const chunk of openclawStream({ messages, maxTokens: agent.maxTokens || 4096, userId })) {
         if (chunk.type === 'delta') {
           fullResult += chunk.content;
           this.emitMissionEvent(missionId, agentExec, 'text', chunk.content);
@@ -411,7 +420,7 @@ Be thorough, precise, and report your progress for each task.`;
    * Resolve agent skills to OpenClaw tool names
    */
   private resolveTools(skills: string[]): string[] {
-    const baseTools = ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'];
+    const baseTools = ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep', 'web_search', 'web_fetch', 'browser'];
     const skillTools = new Set(baseTools);
 
     for (const skill of skills) {

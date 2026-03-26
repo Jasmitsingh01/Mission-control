@@ -35,6 +35,8 @@ const examplePrompts = [
 export function MissionLauncherPage() {
   const navigate = useNavigate()
   const addTask = useTaskStore((s) => s.addTask)
+  const updateTask = useTaskStore((s) => s.updateTask)
+  const tasks = useTaskStore((s) => s.tasks)
   const addAgent = useAgentStore((s) => s.addAgent)
   const addEvent = useActivityStore((s) => s.addEvent)
 
@@ -120,6 +122,29 @@ export function MissionLauncherPage() {
         id: ae.executionId,
       }))
       setAgentExecutionIds(execIds)
+
+      // 3b. Link tasks to execution IDs
+      const missionLabel = 'mission:' + plan.missionName.toLowerCase().replace(/\s+/g, '-')
+      const currentTasks = useTaskStore.getState().tasks
+      const missionTasks = currentTasks.filter((t) => t.labels.includes(missionLabel))
+      for (const ae of execIds) {
+        // Find task matching this agent's name
+        const matchingTask = missionTasks.find((t) =>
+          t.assignedAgentId === ae.name ||
+          t.labels.some((l) => l.toLowerCase().includes(ae.name.toLowerCase()))
+        )
+        if (matchingTask) {
+          updateTask(matchingTask.id, { executionId: ae.id })
+        }
+      }
+      // If only one execution & multiple tasks, link all tasks
+      if (execIds.length === 1 && missionTasks.length > 0) {
+        for (const t of missionTasks) {
+          if (!t.executionId) {
+            updateTask(t.id, { executionId: execIds[0].id })
+          }
+        }
+      }
 
       // 4. Subscribe to each agent's execution stream
       for (const ae of execIds) {

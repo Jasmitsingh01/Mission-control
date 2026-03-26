@@ -128,7 +128,7 @@ mongoose
 
       if (pathname.startsWith('/ws/openclaw/')) {
         openclawWss.handleUpgrade(request, socket, head, (ws) => {
-          const sessionKey = pathname.replace('/ws/openclaw/', '');
+          const sessionKey = decodeURIComponent(pathname.replace('/ws/openclaw/', ''));
           console.log(`[WS] OpenClaw bridge connection for session: ${sessionKey}`);
           openClawService.bridgeSession(sessionKey, ws);
         });

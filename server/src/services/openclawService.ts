@@ -265,12 +265,12 @@ export class OpenClawService {
     return Array.from(this.activeSessions.keys());
   }
 
-  async bridgeSession(sessionKey: string, localSocket: any): Promise<void> {
+  async bridgeSession(sessionKey: string, localSocket: any, userId?: string): Promise<void> {
     if (!localSocket || typeof localSocket.on !== 'function') {
       console.error(`[OpenClaw] bridgeSession failed: localSocket is invalid for ${sessionKey}`);
       return;
     }
-    console.log(`[OpenClaw] Bridging session: ${sessionKey}`);
+    console.log(`[OpenClaw] Bridging session: ${sessionKey}${userId ? ` (user: ${userId})` : ''}`);
 
     const gatewaySocket = new WebSocket(GATEWAY_URL, {
       headers: { Origin: 'http://127.0.0.1:18789' },

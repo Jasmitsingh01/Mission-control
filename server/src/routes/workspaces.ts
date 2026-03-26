@@ -16,7 +16,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     // Create OpenClaw session for workspace
     if (workspace.agents && workspace.agents.length > 0) {
       try {
-        const sessionKey = `agent:main:${workspace._id}`;
+        const sessionKey = `user:${userId}:agent:main:${workspace._id}`;
         const sessionInfo = await openClawService.createSession({
           sessionKey,
           sessionTitle: workspace.name,

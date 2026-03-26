@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { executeApi } from '@/lib/api'
+import { useTaskStore } from './taskStore'
 
 /** Play a completion beep using Web Audio API */
 function playCompletionBeep() {
@@ -396,6 +397,25 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
                 return e
               }),
             }))
+
+            // Sync result back to linked task
+            if (streamEvent.type === 'complete' || streamEvent.type === 'error') {
+              try {
+                const taskStore = useTaskStore.getState()
+                const linkedTask = taskStore.tasks.find((t) => t.executionId === execId)
+                if (linkedTask) {
+                  const updates: any = {
+                    result: streamEvent.content || null,
+                  }
+                  if (streamEvent.type === 'complete') {
+                    updates.status = 'done'
+                  }
+                  taskStore.updateTask(linkedTask.id, updates)
+                }
+              } catch {
+                // ignore if task store not available
+              }
+            }
           }
         }
       } catch {

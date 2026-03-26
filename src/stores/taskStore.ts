@@ -11,13 +11,15 @@ export interface Task {
   assignedAgentId: string | null
   labels: string[]
   dueDate: number | null
+  result: string | null
+  executionId: string | null
   createdAt: number
   updatedAt: number
 }
 
 interface TaskState {
   tasks: Task[]
-  addTask: (task: Omit<Task, 'id' | 'position' | 'createdAt' | 'updatedAt'>) => void
+  addTask: (task: Omit<Task, 'id' | 'position' | 'createdAt' | 'updatedAt' | 'result' | 'executionId'> & { result?: string | null; executionId?: string | null }) => void
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
   moveTask: (id: string, newStatus: TaskStatus, newPosition: number) => void
@@ -44,6 +46,8 @@ export const useTaskStore = create<TaskState>((set) => ({
         ...taskData,
         id: generateId(),
         position: maxPosition + 1,
+        result: taskData.result ?? null,
+        executionId: taskData.executionId ?? null,
         createdAt: now,
         updatedAt: now,
       }

@@ -19,8 +19,13 @@ import {
   RotateCcw,
   Square,
   CheckCircle2,
+  FileText,
+  Terminal,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { useTaskStore } from '@/stores/taskStore'
+import { useExecutionStore } from '@/stores/executionStore'
 import { STATUS_LABELS, PRIORITY_LEVELS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/stores/taskStore'
@@ -48,6 +53,9 @@ interface TaskDetailPanelProps {
 
 export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelProps) {
   const { updateTask, deleteTask } = useTaskStore()
+  const executions = useExecutionStore((s) => s.executions)
+  const streamOutput = useExecutionStore((s) => s.streamOutput)
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<TaskStatus>('inbox')
@@ -55,6 +63,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
   const [labels, setLabels] = useState<string[]>([])
   const [labelInput, setLabelInput] = useState('')
   const [hasChanges, setHasChanges] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (task) {
@@ -65,10 +74,24 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
       setLabels([...task.labels])
       setHasChanges(false)
       setLabelInput('')
+      setCopied(false)
     }
   }, [task])
 
   if (!task) return null
+
+  // Find linked execution
+  const execution = task.executionId
+    ? executions.find((e) => e.id === task.executionId)
+    : null
+  const executionOutput = task.executionId
+    ? streamOutput.get(task.executionId) || ''
+    : ''
+
+  // Determine result to show
+  const taskResult = task.result || execution?.result || ''
+  const isCompleted = task.status === 'done'
+  const isFailed = execution?.status === 'failed'
 
   const markChanged = () => setHasChanges(true)
 
@@ -96,27 +119,27 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
     markChanged()
   }
 
-  const createdDate = new Date(task.createdAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const handleCopyResult = () => {
+    const text = taskResult || executionOutput
+    if (text) {
+      navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
+  const createdDate = new Date(task.createdAt).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
   const updatedDate = new Date(task.updatedAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-surface-container-low border-l border-outline-variant/20 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-outline-variant/10">
-          <SheetTitle className="text-left pr-8 font-mono text-sm uppercase tracking-widest text-on-surface-variant">
+          <SheetTitle className="text-left pr-8 text-sm font-semibold text-on-surface-variant">
             Task Details
           </SheetTitle>
         </SheetHeader>
@@ -124,9 +147,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
         <div className="space-y-5 px-6 py-6">
           {/* Title */}
           <div>
-            <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
-              Title
-            </label>
+            <label className="text-xs font-medium text-on-surface-variant mb-2 block">Title</label>
             <Input
               value={title}
               onChange={(e) => { setTitle(e.target.value); markChanged() }}
@@ -136,23 +157,106 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
 
           {/* Description */}
           <div>
-            <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
-              Description
-            </label>
+            <label className="text-xs font-medium text-on-surface-variant mb-2 block">Description</label>
             <textarea
               value={description}
               onChange={(e) => { setDescription(e.target.value); markChanged() }}
-              rows={4}
+              rows={3}
               className="flex w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 resize-none"
             />
           </div>
 
+          {/* Task Result / Output */}
+          {(isCompleted || isFailed || taskResult || executionOutput) && (
+            <div className={cn(
+              'rounded-lg border p-4',
+              isFailed
+                ? 'bg-error/5 border-error/20'
+                : isCompleted
+                ? 'bg-green-500/5 border-green-500/20'
+                : 'bg-surface-container border-outline-variant/20'
+            )}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {isFailed ? (
+                    <AlertCircle className="h-4 w-4 text-error" />
+                  ) : isCompleted ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <FileText className="h-4 w-4 text-primary" />
+                  )}
+                  <span className="text-xs font-semibold text-on-surface">
+                    {isFailed ? 'Error Output' : 'Task Result'}
+                  </span>
+                </div>
+                {(taskResult || executionOutput) && (
+                  <button
+                    onClick={handleCopyResult}
+                    className="text-xs text-on-surface-variant hover:text-on-surface flex items-center gap-1 transition-colors"
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                )}
+              </div>
+
+              {taskResult ? (
+                <div className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+                  {taskResult}
+                </div>
+              ) : executionOutput ? (
+                <div className="bg-surface-container-lowest rounded-lg p-3 max-h-64 overflow-y-auto">
+                  <pre className="text-xs text-on-surface-variant font-mono whitespace-pre-wrap break-words">
+                    {executionOutput}
+                  </pre>
+                </div>
+              ) : (
+                <p className="text-xs text-outline">No output yet.</p>
+              )}
+
+              {/* Execution stats */}
+              {execution && (
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-outline-variant/10">
+                  {execution.usage.durationMs > 0 && (
+                    <span className="text-[10px] text-on-surface-variant font-mono flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {(execution.usage.durationMs / 1000).toFixed(1)}s
+                    </span>
+                  )}
+                  {execution.usage.totalTurns > 0 && (
+                    <span className="text-[10px] text-on-surface-variant font-mono flex items-center gap-1">
+                      <Terminal className="h-3 w-3" />
+                      {execution.usage.totalTurns} turns
+                    </span>
+                  )}
+                  {execution.usage.outputTokens > 0 && (
+                    <span className="text-[10px] text-on-surface-variant font-mono">
+                      {execution.usage.inputTokens + execution.usage.outputTokens} tokens
+                    </span>
+                  )}
+                  {execution.usage.costUsd > 0 && (
+                    <span className="text-[10px] text-on-surface-variant font-mono">
+                      ${execution.usage.costUsd.toFixed(4)}
+                    </span>
+                  )}
+                  <span className={cn(
+                    'text-[10px] font-mono font-medium uppercase ml-auto',
+                    execution.status === 'completed' ? 'text-green-500' :
+                    execution.status === 'failed' ? 'text-error' :
+                    execution.status === 'running' ? 'text-secondary' :
+                    'text-outline'
+                  )}>
+                    {execution.status}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Status + Priority */}
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
-                Status
-              </label>
+              <label className="text-xs font-medium text-on-surface-variant mb-2 block">Status</label>
               <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value as TaskStatus); markChanged() }}
@@ -164,9 +268,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
               </select>
             </div>
             <div>
-              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
-                Priority
-              </label>
+              <label className="text-xs font-medium text-on-surface-variant mb-2 block">Priority</label>
               <div className="flex gap-1.5">
                 {PRIORITY_LEVELS.map((p) => {
                   const Icon = priorityIcons[p]
@@ -175,7 +277,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
                       key={p}
                       type="button"
                       className={cn(
-                        "flex-1 h-9 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest flex items-center justify-center gap-1 border transition-all",
+                        "flex-1 h-9 rounded-lg text-[10px] font-medium uppercase tracking-wider flex items-center justify-center gap-1 border transition-colors",
                         priority === p
                           ? priorityColors[p]
                           : 'border-outline-variant/10 bg-surface-container text-outline hover:text-on-surface-variant hover:border-outline-variant/30'
@@ -193,33 +295,28 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
 
           {/* Labels */}
           <div>
-            <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline mb-2 block">
-              Labels
-            </label>
+            <label className="text-xs font-medium text-on-surface-variant mb-2 block">Labels</label>
             <div className="flex gap-2 mb-2">
               <Input
                 placeholder="Add label..."
                 value={labelInput}
                 onChange={(e) => setLabelInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addLabel()
-                  }
+                  if (e.key === 'Enter') { e.preventDefault(); addLabel() }
                 }}
                 className="flex-1 bg-surface-container-lowest border-outline-variant/20 text-sm"
               />
               <button
                 type="button"
                 onClick={addLabel}
-                className="font-mono uppercase tracking-widest text-[10px] font-bold px-3 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                className="text-xs font-medium px-3 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-colors"
               >
                 Add
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {labels.map((label) => (
-                <span key={label} className="inline-flex items-center gap-1 font-mono text-[10px] font-bold bg-primary-container/20 text-primary px-2 py-0.5 rounded">
+                <span key={label} className="inline-flex items-center gap-1 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">
                   {label}
                   <button onClick={() => removeLabel(label)} className="hover:text-error transition-colors">
                     <X className="h-3 w-3" />
@@ -227,17 +324,17 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
                 </span>
               ))}
               {labels.length === 0 && (
-                <span className="font-mono text-[10px] text-outline">No labels</span>
+                <span className="text-[10px] text-outline">No labels</span>
               )}
             </div>
           </div>
 
           {/* Metadata */}
           <div className="bg-surface-container p-3 rounded-lg space-y-2.5">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline">Metadata</span>
+            <span className="text-xs font-medium text-on-surface-variant">Metadata</span>
             {task.assignedAgentId && (
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
                   <Bot className="h-3 w-3 text-secondary" />
                   Assigned Agent
                 </span>
@@ -245,94 +342,69 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
                 <Clock className="h-3 w-3 text-outline" />
                 Created
               </span>
               <span className="font-mono text-[10px] text-on-surface-variant">{createdDate}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
                 <Clock className="h-3 w-3 text-outline" />
                 Updated
               </span>
               <span className="font-mono text-[10px] text-on-surface-variant">{updatedDate}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-on-surface-variant">ID</span>
+              <span className="text-xs text-on-surface-variant">ID</span>
               <code className="font-mono text-[10px] text-outline">{task.id}</code>
             </div>
+            {task.executionId && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-on-surface-variant">Execution</span>
+                <code className="font-mono text-[10px] text-secondary">{task.executionId}</code>
+              </div>
+            )}
           </div>
 
-          {/* Live Activity Log placeholder */}
-          <div className="bg-surface-container-lowest rounded-xl p-4">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-outline block mb-2">Activity Log</span>
-            <div className="font-mono text-[11px] text-on-surface-variant space-y-1">
+          {/* Activity Log */}
+          <div className="bg-surface-container-lowest rounded-lg p-4">
+            <span className="text-xs font-medium text-on-surface-variant block mb-2">Activity Log</span>
+            <div className="text-xs text-on-surface-variant space-y-1">
               <p className="text-outline">Task created {createdDate}</p>
               {task.assignedAgentId && (
                 <p className="text-secondary">Assigned to agent <span className="text-primary">{task.assignedAgentId}</span></p>
+              )}
+              {isCompleted && (
+                <p className="text-green-500">Task completed</p>
+              )}
+              {isFailed && (
+                <p className="text-error">Execution failed: {execution?.error || 'Unknown error'}</p>
               )}
               <p className="text-outline">Last updated {updatedDate}</p>
             </div>
           </div>
 
-          {/* Action buttons - 3-column grid */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className={cn(
-                "font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all",
-                hasChanges
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                  : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
-              )}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Approve
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className={cn(
-                "font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all",
-                hasChanges
-                  ? 'bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30'
-                  : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
-              )}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Retry
-            </button>
-            <button
-              onClick={handleDelete}
-              className="font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 bg-error/20 text-error border border-error/30 hover:bg-error/30 transition-all"
-            >
-              <Square className="h-3.5 w-3.5" />
-              Stop
-            </button>
-          </div>
-
-          {/* Secondary actions */}
+          {/* Action buttons */}
           <div className="flex gap-2">
             <button
               onClick={handleSave}
               disabled={!hasChanges}
               className={cn(
-                "flex-1 font-mono uppercase tracking-widest text-[10px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all",
+                "flex-1 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors",
                 hasChanges
-                  ? 'synthetic-gradient text-white hover:opacity-90'
+                  ? 'bg-primary text-on-primary hover:bg-primary/90'
                   : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
               )}
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-4 w-4" />
               Save Changes
             </button>
             <button
               onClick={handleDelete}
-              className="font-mono uppercase tracking-widest text-[10px] font-bold px-3 py-2.5 rounded-lg bg-error-container/20 text-error border border-error/30 hover:bg-error-container/30 transition-all"
+              className="text-sm font-medium px-4 py-2.5 rounded-lg bg-error/10 text-error border border-error/20 hover:bg-error/20 transition-colors"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
             </button>
           </div>
         </div>

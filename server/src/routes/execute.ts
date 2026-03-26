@@ -55,7 +55,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       taskTitle: taskTitle || 'Untitled Task',
       prompt,
       claudeModel: model || 'claude-sonnet-4-6',
-      allowedTools: allowedTools || ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'],
+      allowedTools: allowedTools || ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep', 'web_search', 'web_fetch', 'browser'],
       workingDirectory: workingDirectory || process.cwd(),
       status: 'queued',
     });
@@ -66,7 +66,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       executionId: execution._id.toString(),
       prompt,
       model: model || 'claude-sonnet-4-6',
-      allowedTools: allowedTools || ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'],
+      allowedTools: allowedTools || ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep', 'web_search', 'web_fetch', 'browser'],
       workingDirectory: workingDirectory || process.cwd(),
       maxTurns: maxTurns || 25,
       systemPrompt,
