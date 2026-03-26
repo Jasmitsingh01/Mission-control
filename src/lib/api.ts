@@ -241,10 +241,3 @@ export const executeApi = {
   activeCount: () => apiFetch('/executions/active/count'),
 }
 
-// Telegram
-export const telegramApi = {
-  generateLinkCode: () =>
-    apiFetch('/telegram/generate-link-code', { method: 'POST' }),
-  status: () => apiFetch('/telegram/status'),
-  unlink: () => apiFetch('/telegram/unlink', { method: 'DELETE' }),
-}

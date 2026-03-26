@@ -33,6 +33,7 @@ import { AcceptInvitePage } from '@/features/orgs/AcceptInvitePage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { ExecutionsPage } from '@/features/executions/ExecutionsPage'
 import { AdminPage } from '@/features/admin/AdminPage'
+import { ProfilePage } from '@/features/profile/ProfilePage'
 import MissionControlPage from '@/features/mission-control/MissionControlPage'
 
 export default function App() {
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="org" element={<OrgPage />} />
             <Route path="executions" element={<ExecutionsPage />} />
             <Route path="mission-control" element={<MissionControlPage />} />
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="admin" element={<AdminPage />} />
           </Route>

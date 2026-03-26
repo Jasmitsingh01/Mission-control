@@ -53,7 +53,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-outline-variant/20 px-5 py-5">
+      <div className={cn('flex items-center gap-3 border-b border-outline-variant/20 py-5', sidebarCollapsed ? 'justify-center px-3' : 'px-5')}>
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary-container font-bold text-sm">
           AF
         </div>
@@ -140,14 +140,15 @@ function SidebarLink({
       end={to === '/dashboard'}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
+          'flex items-center gap-3 py-2.5 transition-all duration-200',
           'font-mono text-xs uppercase tracking-widest',
+          collapsed ? 'px-3 justify-center' : 'px-3',
           danger
             ? isActive
-              ? 'text-error bg-error/10 border-r-2 border-error rounded-l-lg'
+              ? 'text-error bg-error/10 rounded-lg'
               : 'text-error/70 hover:bg-error/10 rounded-lg'
             : isActive
-            ? 'text-secondary bg-surface-container-low border-r-2 border-secondary rounded-l-lg'
+            ? 'text-secondary bg-surface-container-low rounded-lg'
             : 'text-on-surface-variant hover:bg-surface-container-low/50 rounded-lg'
         )
       }

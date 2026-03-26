@@ -42,7 +42,7 @@ export function SignupPage() {
           <p className="text-on-surface-variant mt-2 text-sm">Start orchestrating AI agents in minutes</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
+        <div className="bg-card rounded-xl border border-outline-variant/30 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="rounded-lg bg-error/10 border border-error/20 px-4 py-3">

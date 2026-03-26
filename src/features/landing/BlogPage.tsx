@@ -79,7 +79,7 @@ export function BlogPage() {
 
       {/* Featured Post */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 mb-16">
-        <div className="bg-white rounded-xl border border-outline-variant/30 overflow-hidden group cursor-pointer hover:border-primary/20 transition-colors">
+        <div className="bg-card rounded-xl border border-outline-variant/30 overflow-hidden group cursor-pointer hover:border-primary/20 transition-colors">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             {/* Image placeholder */}
             <div className="bg-surface-container h-64 lg:h-auto flex items-center justify-center relative overflow-hidden">
@@ -116,7 +116,7 @@ export function BlogPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {articles.map((article) => (
             <div key={article.title}>
-              <div className="h-full bg-white rounded-xl border border-outline-variant/30 overflow-hidden group cursor-pointer hover:border-primary/20 transition-colors flex flex-col">
+              <div className="h-full bg-card rounded-xl border border-outline-variant/30 overflow-hidden group cursor-pointer hover:border-primary/20 transition-colors flex flex-col">
                 {/* Image placeholder */}
                 <div className="bg-surface-container h-40 flex items-center justify-center relative overflow-hidden">
                   <article.icon className="h-10 w-10 text-primary/10 relative z-10" />
@@ -161,7 +161,7 @@ export function BlogPage() {
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/15 text-on-primary placeholder:text-on-primary/50 border-0 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
+                    className="w-full bg-card/15 text-on-primary placeholder:text-on-primary/50 border-0 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
                     required
                   />
                   <button

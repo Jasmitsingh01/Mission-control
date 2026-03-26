@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* AgentForge Light Theme */
+  /* AgentForge Light Theme (default) */
   /* Surface tokens - light backgrounds */
   --color-surface-dim: #f5f3f7;
   --color-surface: #ffffff;
@@ -103,9 +103,106 @@
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
+/* ========== Dark Theme Overrides ========== */
+.dark {
+  /* Surface tokens - dark backgrounds */
+  --color-surface-dim: #121212;
+  --color-surface: #1e1e1e;
+  --color-surface-bright: #2c2c2c;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1a1a1a;
+  --color-surface-container: #222222;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #333333;
+  --color-surface-variant: #3a3640;
+
+  /* On-surface tokens - light text */
+  --color-on-surface: #e6e1e6;
+  --color-on-surface-variant: #cac4cf;
+  --color-on-background: #e6e1e6;
+
+  /* Primary tokens */
+  --color-primary: #d0bcff;
+  --color-on-primary: #381e72;
+  --color-primary-container: #a78bfa;
+  --color-on-primary-container: #1e1e1e;
+  --color-primary-fixed: #eaddff;
+  --color-primary-fixed-dim: #d0bcff;
+  --color-on-primary-fixed: #21005d;
+  --color-on-primary-fixed-variant: #4f378b;
+  --color-inverse-primary: #6750a4;
+
+  /* Secondary tokens */
+  --color-secondary: #4dd0e1;
+  --color-on-secondary: #00363e;
+  --color-secondary-container: #004d59;
+  --color-on-secondary-container: #b2ebf2;
+  --color-secondary-fixed: #cff8ff;
+  --color-secondary-fixed-dim: #a0ecff;
+  --color-on-secondary-fixed: #001f26;
+  --color-on-secondary-fixed-variant: #004e5c;
+
+  /* Tertiary tokens */
+  --color-tertiary: #ffb74d;
+  --color-on-tertiary: #4e2600;
+  --color-tertiary-container: #6b3800;
+  --color-on-tertiary-container: #ffdcc6;
+  --color-tertiary-fixed: #ffdcc6;
+  --color-tertiary-fixed-dim: #ffb784;
+  --color-on-tertiary-fixed: #301400;
+  --color-on-tertiary-fixed-variant: #713700;
+
+  /* Error tokens */
+  --color-error: #f87171;
+  --color-on-error: #601410;
+  --color-error-container: #3b1414;
+  --color-on-error-container: #fecaca;
+
+  /* Outline tokens */
+  --color-outline: #938f99;
+  --color-outline-variant: #49454f;
+
+  /* Inverse tokens */
+  --color-inverse-surface: #e6e1e6;
+  --color-inverse-on-surface: #313033;
+
+  /* Surface tint */
+  --color-surface-tint: #d0bcff;
+
+  /* Shadcn compatibility */
+  --color-background: #121212;
+  --color-foreground: #e6e1e6;
+  --color-card: #1e1e1e;
+  --color-card-foreground: #e6e1e6;
+  --color-popover: #1e1e1e;
+  --color-popover-foreground: #e6e1e6;
+  --color-muted: #2a2a2a;
+  --color-muted-foreground: #938f99;
+  --color-accent: #2a2a2a;
+  --color-accent-foreground: #e6e1e6;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #49454f;
+  --color-input: #2a2a2a;
+  --color-ring: #d0bcff;
+  --color-chart-1: #d0bcff;
+  --color-chart-2: #4dd0e1;
+  --color-chart-3: #ffb74d;
+  --color-chart-4: #a78bfa;
+  --color-chart-5: #38bdf8;
+  --color-sidebar-background: #1a1a1a;
+  --color-sidebar-foreground: #cac4cf;
+  --color-sidebar-primary: #d0bcff;
+  --color-sidebar-primary-foreground: #381e72;
+  --color-sidebar-accent: #2a2a2a;
+  --color-sidebar-accent-foreground: #d0bcff;
+  --color-sidebar-border: #49454f;
+  --color-sidebar-ring: #d0bcff;
+}
+
 /* Primary solid utility */
 .synthetic-gradient {
-  background: #6750a4;
+  background: var(--color-primary);
 }
 
 /* Glass panel utility */
@@ -113,16 +210,22 @@
   backdrop-filter: blur(12px);
   background-color: rgba(255, 255, 255, 0.8);
 }
+.dark .glass-panel {
+  background-color: rgba(30, 30, 30, 0.8);
+}
 
 /* Recessed well utility */
 .recessed-well {
-  background-color: #f2f0f5;
+  background-color: var(--color-surface-container);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.dark .recessed-well {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Terminal glow */
 .terminal-glow {
-  color: #0891b2;
+  color: var(--color-secondary);
 }
 
 /* Custom scrollbar */
@@ -131,10 +234,10 @@
   height: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f5f3f7;
+  background: var(--color-surface-dim);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cac4d0;
+  background: var(--color-outline-variant);
   border-radius: 10px;
 }
 
@@ -142,17 +245,17 @@
   * {
     @apply border-border;
     scrollbar-width: thin;
-    scrollbar-color: #cac4d0 #f5f3f7;
+    scrollbar-color: var(--color-outline-variant) var(--color-surface-dim);
   }
   *::-webkit-scrollbar {
     width: 4px;
     height: 4px;
   }
   *::-webkit-scrollbar-track {
-    background: #f5f3f7;
+    background: var(--color-surface-dim);
   }
   *::-webkit-scrollbar-thumb {
-    background: #cac4d0;
+    background: var(--color-outline-variant);
     border-radius: 10px;
   }
   body {

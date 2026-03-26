@@ -41,7 +41,7 @@ export function LoginPage() {
           <p className="text-on-surface-variant mt-2 text-sm">Log in to your AgentForge account</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
+        <div className="bg-card rounded-xl border border-outline-variant/30 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="rounded-lg bg-error/10 border border-error/20 px-4 py-3">
@@ -98,7 +98,7 @@ export function LoginPage() {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-outline-variant/30" /></div>
-              <div className="relative flex justify-center"><span className="bg-white px-4 text-xs text-outline">or continue with</span></div>
+              <div className="relative flex justify-center"><span className="bg-card px-4 text-xs text-outline">or continue with</span></div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

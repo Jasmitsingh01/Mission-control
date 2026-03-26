@@ -109,7 +109,7 @@ export function LandingPage() {
 
           {/* Right - Kanban Visual */}
           <div className="lg:col-span-5">
-            <div className="bg-white rounded-xl border border-outline-variant/40 p-4 shadow-sm">
+            <div className="bg-card rounded-xl border border-outline-variant/40 p-4 shadow-sm">
               <div className="flex gap-3">
                 {/* TODO Column */}
                 <div className="flex-1">
@@ -231,7 +231,7 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.map((feature) => (
               <div key={feature.title} className={feature.span}>
-                <div className="h-full bg-white rounded-xl border border-outline-variant/30 p-6 hover:border-primary/20 transition-colors">
+                <div className="h-full bg-card rounded-xl border border-outline-variant/30 p-6 hover:border-primary/20 transition-colors">
                   <div className="inline-flex rounded-lg bg-surface-container p-2.5 mb-4">
                     <feature.icon className="h-5 w-5 text-primary" />
                   </div>
@@ -270,7 +270,7 @@ export function LandingPage() {
           </div>
 
           {/* Use case detail */}
-          <div className="bg-white rounded-xl border border-outline-variant/30 p-8 md:p-12 max-w-4xl mx-auto">
+          <div className="bg-card rounded-xl border border-outline-variant/30 p-8 md:p-12 max-w-4xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
                 <h3 className="text-xl font-semibold text-on-surface mb-3">{currentUseCase.title}</h3>
@@ -298,7 +298,7 @@ export function LandingPage() {
       {/* Final CTA */}
       <section className="py-24 bg-surface-container-lowest">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <div className="rounded-xl border border-outline-variant/30 bg-white p-12">
+          <div className="rounded-xl border border-outline-variant/30 bg-card p-12">
             <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface">
               Ready to get started?
             </h2>

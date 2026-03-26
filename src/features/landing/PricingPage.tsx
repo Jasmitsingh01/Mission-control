@@ -180,8 +180,8 @@ export function PricingPage() {
             <div key={plan.name}>
               <div className={`h-full relative rounded-xl border p-8 ${
                 plan.popular
-                  ? 'border-primary bg-white shadow-sm'
-                  : 'border-outline-variant/30 bg-white'
+                  ? 'border-primary bg-card shadow-sm'
+                  : 'border-outline-variant/30 bg-card'
               }`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -236,7 +236,7 @@ export function PricingPage() {
           <h2 className="text-2xl font-bold tracking-tight text-on-surface">Feature Comparison</h2>
         </div>
 
-        <div className="bg-white rounded-xl border border-outline-variant/30 overflow-hidden">
+        <div className="bg-card rounded-xl border border-outline-variant/30 overflow-hidden">
           {/* Table header */}
           <div className="grid grid-cols-4 gap-4 px-6 py-4 border-b border-outline-variant/20 bg-surface-container">
             <div className="text-sm font-semibold text-on-surface">Feature</div>
@@ -281,7 +281,7 @@ export function PricingPage() {
           {faqs.map((faq, i) => (
             <div key={faq.q}>
               <div
-                className="bg-white rounded-xl border border-outline-variant/30 p-5 cursor-pointer hover:border-primary/20 transition-colors"
+                className="bg-card rounded-xl border border-outline-variant/30 p-5 cursor-pointer hover:border-primary/20 transition-colors"
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -320,7 +320,7 @@ export function PricingPage() {
               </button>
             </Link>
             <Link to="/contact">
-              <button className="border border-white/30 text-white px-8 py-3 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors">
+              <button className="border border-white/30 text-white px-8 py-3 rounded-lg text-sm font-medium hover:bg-card/10 transition-colors">
                 Talk to Sales
               </button>
             </Link>

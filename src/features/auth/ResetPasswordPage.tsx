@@ -52,7 +52,7 @@ export function ResetPasswordPage() {
           <p className="text-on-surface-variant mt-2 text-sm">Choose a strong password for your account</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
+        <div className="bg-card rounded-xl border border-outline-variant/30 p-8">
           {!done ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (

@@ -56,14 +56,14 @@ export function AboutPage() {
                 { icon: Zap, label: 'Real-time' },
                 { icon: Target, label: 'Task-Focused' },
               ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3 rounded-lg border border-outline-variant/30 bg-white p-3">
+                <div key={item.label} className="flex items-center gap-3 rounded-lg border border-outline-variant/30 bg-card p-3">
                   <item.icon className="h-4 w-4 text-primary shrink-0" />
                   <span className="text-sm font-medium text-on-surface">{item.label}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-outline-variant/30 bg-white p-8">
+          <div className="rounded-xl border border-outline-variant/30 bg-card p-8">
             <div className="grid grid-cols-2 gap-6 text-center">
               {[
                 { value: '10+', label: 'AI Models' },
@@ -91,7 +91,7 @@ export function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((v) => (
               <div key={v.title}>
-                <div className="h-full text-center bg-white rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
+                <div className="h-full text-center bg-card rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
                   <div className="inline-flex rounded-lg bg-surface-container p-2.5 mb-4">
                     <v.icon className="h-5 w-5 text-primary" />
                   </div>
@@ -113,7 +113,7 @@ export function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {team.map((t) => (
             <div key={t.name}>
-              <div className="text-center bg-white rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
+              <div className="text-center bg-card rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
                 <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-surface-container text-primary font-semibold text-lg font-mono mb-4">
                   {t.avatar}
                 </div>

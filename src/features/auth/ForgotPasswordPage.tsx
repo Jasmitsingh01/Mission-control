@@ -43,7 +43,7 @@ export function ForgotPasswordPage() {
           <p className="text-on-surface-variant mt-2 text-sm">Enter your email to receive a reset link</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
+        <div className="bg-card rounded-xl border border-outline-variant/30 p-8">
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (

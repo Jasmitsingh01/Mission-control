@@ -38,7 +38,7 @@ export function ContactPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {contactInfo.map((info) => (
             <div key={info.title}>
-              <div className="text-center bg-white rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
+              <div className="text-center bg-card rounded-xl border border-outline-variant/30 p-8 hover:border-primary/20 transition-colors">
                 <div className="inline-flex rounded-lg bg-surface-container p-2.5 mb-4">
                   <info.icon className="h-5 w-5 text-primary" />
                 </div>
@@ -53,7 +53,7 @@ export function ContactPage() {
 
       {/* Form */}
       <section className="max-w-2xl mx-auto px-6 lg:px-8">
-        <div className="bg-white rounded-xl border border-outline-variant/30 p-8">
+        <div className="bg-card rounded-xl border border-outline-variant/30 p-8">
           {sent ? (
             <div className="text-center py-12">
               <CheckCircle2 className="h-12 w-12 text-secondary mx-auto mb-6" />

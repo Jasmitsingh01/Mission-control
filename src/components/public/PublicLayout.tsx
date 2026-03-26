@@ -31,8 +31,8 @@ export function PublicLayout() {
       <nav className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-200',
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-outline-variant/20'
-          : 'bg-white/95 backdrop-blur-md'
+          ? 'bg-card/95 backdrop-blur-md shadow-sm border-b border-outline-variant/20'
+          : 'bg-card/95 backdrop-blur-md'
       )}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -95,7 +95,7 @@ export function PublicLayout() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-outline-variant/20 bg-white">
+          <div className="md:hidden border-t border-outline-variant/20 bg-card">
             <div className="px-6 py-4 space-y-2">
               {navLinks.map((link) => (
                 <Link
@@ -138,7 +138,7 @@ export function PublicLayout() {
       <Outlet />
 
       {/* Footer */}
-      <footer className="bg-white border-t border-outline-variant/20">
+      <footer className="bg-card border-t border-outline-variant/20">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
