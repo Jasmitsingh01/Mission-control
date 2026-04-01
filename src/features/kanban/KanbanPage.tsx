@@ -1,47 +1,74 @@
-import { Plus, Filter } from 'lucide-react'
-import { useState } from 'react'
+import { Plus, LayoutGrid } from 'lucide-react'
+import { useState, useMemo } from 'react'
 import { KanbanBoard } from './KanbanBoard'
 import { CreateTaskDialog } from './CreateTaskDialog'
+import { LiveFeed } from './LiveFeed'
+import { useTaskStore } from '@/stores/taskStore'
+import { useAgentStore } from '@/stores/agentStore'
 
 export function KanbanPage() {
   const [createOpen, setCreateOpen] = useState(false)
+  const tasks = useTaskStore((s) => s.tasks)
+  const agents = useAgentStore((s) => s.agents)
+
+  const stats = useMemo(() => {
+    const total = tasks.length
+    const done = tasks.filter(t => t.status === 'done').length
+    const active = total - done
+    const activeAgents = agents.filter(a => a.status === 'running').length
+    return { total, done, active, activeAgents }
+  }, [tasks, agents])
 
   return (
-    <div className="space-y-6 pb-4 bg-surface-dim min-h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between pt-2">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Workflow</p>
-          <h1 className="text-3xl font-bold text-on-surface tracking-tight">Task Board</h1>
-          <p className="text-sm text-on-surface-variant mt-2">
-            Drag tasks between columns to update their status
-          </p>
+    <div className="flex flex-col h-full min-h-full bg-[#faf8f3]">
+      {/* Header bar */}
+      <header className="flex items-center justify-between px-5 py-3 bg-white border-b border-[#e6e2da] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4870b] to-[#b5720a] flex items-center justify-center">
+            <LayoutGrid className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h1 className="text-[0.88rem] font-bold text-[#1a1a1a] tracking-tight leading-none">Task Board</h1>
+            <p className="text-[0.6rem] text-[#a19a8f] mt-0.5">Mission Queue &middot; {stats.total} tasks</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="text-sm font-medium px-4 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-          </button>
+          {/* Dynamic stats */}
+          <div className="hidden md:flex items-center gap-4">
+            <div className="text-center">
+              <span className="block text-lg font-extrabold text-[#1a1a1a] leading-none tabular-nums">{stats.active}</span>
+              <span className="text-[0.5rem] font-bold text-[#a19a8f] tracking-[0.08em] uppercase">Active</span>
+            </div>
+            <div className="w-px h-6 bg-[#e6e2da]" />
+            <div className="text-center">
+              <span className="block text-lg font-extrabold text-[#2d9a4e] leading-none tabular-nums">{stats.done}</span>
+              <span className="text-[0.5rem] font-bold text-[#a19a8f] tracking-[0.08em] uppercase">Done</span>
+            </div>
+            <div className="w-px h-6 bg-[#e6e2da]" />
+            <div className="text-center">
+              <span className="block text-lg font-extrabold text-[#3b7dd8] leading-none tabular-nums">{stats.activeAgents}</span>
+              <span className="text-[0.5rem] font-bold text-[#a19a8f] tracking-[0.08em] uppercase">Agents</span>
+            </div>
+          </div>
           <button
             onClick={() => setCreateOpen(true)}
-            className="bg-primary text-on-primary text-sm font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary/90 transition-colors"
+            className="bg-[#1a1a1a] text-white text-[0.72rem] font-semibold px-4 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#333] active:scale-[0.97] transition-all"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             New Task
           </button>
         </div>
+      </header>
+
+      {/* Main: Board + Live Feed */}
+      <div className="flex-1 overflow-hidden flex min-h-0">
+        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+          <KanbanBoard />
+        </div>
+        <LiveFeed />
       </div>
 
-      {/* Board */}
-      <div className="overflow-x-auto overflow-y-hidden">
-        <KanbanBoard />
-      </div>
-
-      <CreateTaskDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        defaultStatus="inbox"
-      />
+      <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} defaultStatus="backlog" />
     </div>
   )
 }

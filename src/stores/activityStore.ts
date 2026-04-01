@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export type ActivityType =
   | 'task_created'
@@ -31,26 +32,42 @@ export interface ActivityEvent {
 
 interface ActivityState {
   events: ActivityEvent[]
+  _hydrated: boolean
   addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void
   clearEvents: () => void
+  setEvents: (events: ActivityEvent[]) => void
 }
 
-let nextId = 200
+let nextId = Date.now()
 
-export const useActivityStore = create<ActivityState>((set) => ({
-  events: [],
+export const useActivityStore = create<ActivityState>()(
+  persist(
+    (set) => ({
+      events: [],
+      _hydrated: false,
 
-  addEvent: (eventData) =>
-    set((state) => ({
-      events: [
-        {
-          ...eventData,
-          id: `evt_${++nextId}`,
-          timestamp: Date.now(),
-        },
-        ...state.events,
-      ],
-    })),
+      addEvent: (eventData) =>
+        set((state) => ({
+          events: [
+            {
+              ...eventData,
+              id: `evt_${++nextId}`,
+              timestamp: Date.now(),
+            },
+            ...state.events,
+          ].slice(0, 200), // Keep max 200 events
+        })),
 
-  clearEvents: () => set({ events: [] }),
-}))
+      clearEvents: () => set({ events: [] }),
+
+      setEvents: (events) => set({ events }),
+    }),
+    {
+      name: 'mc-activity',
+      partialize: (state) => ({ events: state.events }),
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hydrated = true
+      },
+    }
+  )
+)

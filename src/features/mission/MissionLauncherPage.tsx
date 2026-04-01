@@ -51,6 +51,7 @@ export function MissionLauncherPage() {
   const [launchProgress, setLaunchProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [agentExecutionIds, setAgentExecutionIds] = useState<{ name: string; id: string }[]>([])
+  const [streamProgress, setStreamProgress] = useState('')
 
   const handleGenerate = useCallback(async () => {
     if (!description.trim()) return
@@ -58,9 +59,14 @@ export function MissionLauncherPage() {
 
     setStep('planning')
     setError(null)
+    setStreamProgress('')
 
     try {
-      const generatedPlan = await generateMissionPlan(description.trim(), name)
+      const generatedPlan = await generateMissionPlan(
+        description.trim(),
+        name,
+        (text) => setStreamProgress(text),
+      )
       setPlan(generatedPlan)
       setStep('review')
     } catch (err) {
@@ -315,15 +321,15 @@ export function MissionLauncherPage() {
 
       {/* STEP: Planning (loading) */}
       {step === 'planning' && (
-        <div className="bg-surface-container-low rounded-xl border border-outline-variant/10 p-16">
+        <div className="bg-surface rounded-2xl border border-outline-variant/10 p-10 card-elevated animate-fade-in">
           <div className="flex flex-col items-center justify-center">
             <div className="relative">
               <Loader2 className="h-12 w-12 text-primary animate-spin" />
             </div>
-            <p className="text-sm text-on-surface-variant mt-4">
+            <p className="text-sm text-on-surface-variant mt-4 font-medium">
               AI is analyzing your requirements...
             </p>
-            <p className="font-mono text-[10px] text-outline mt-2">
+            <p className="font-mono text-[10px] text-outline/50 mt-2">
               Powered by OpenRouter
             </p>
             <div className="flex items-center gap-6 mt-6">
@@ -337,6 +343,20 @@ export function MissionLauncherPage() {
                 <Sparkles className="h-3.5 w-3.5 text-tertiary" /> Optimizing workflow
               </span>
             </div>
+
+            {/* Live streaming progress */}
+            {streamProgress && (
+              <div className="mt-6 w-full max-w-xl">
+                <div className="bg-surface-container rounded-xl border border-outline-variant/8 p-4 max-h-48 overflow-y-auto">
+                  <pre className="text-[11px] font-mono text-on-surface-variant/70 whitespace-pre-wrap break-words leading-relaxed">
+                    {streamProgress.slice(-500)}
+                  </pre>
+                </div>
+                <p className="font-mono text-[10px] text-secondary mt-2 text-center animate-pulse-subtle">
+                  Streaming response... {streamProgress.length} chars received
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

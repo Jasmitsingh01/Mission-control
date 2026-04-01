@@ -1,125 +1,150 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Calendar, Bot, AlertCircle, ArrowUp, ArrowDown, Minus } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { PRIORITY_COLORS, PRIORITY_SYMBOLS, AGENT_MAP, STATUS_DOT_COLORS } from '@/lib/constants'
+import { useAgentStore } from '@/stores/agentStore'
 import type { Task } from '@/stores/taskStore'
-import type { Priority } from '@/lib/constants'
 
-const priorityConfig: Record<Priority, { icon: React.ComponentType<{ className?: string }>; color: string; label: string }> = {
-  critical: { icon: AlertCircle, color: 'text-red-400', label: 'Critical' },
-  high: { icon: ArrowUp, color: 'text-orange-400', label: 'High' },
-  medium: { icon: Minus, color: 'text-yellow-400', label: 'Medium' },
-  low: { icon: ArrowDown, color: 'text-muted-foreground', label: 'Low' },
+function relativeTime(ts: number) {
+  const diff = Date.now() - ts
+  const m = Math.floor(diff / 6e4)
+  if (m < 60) return m < 1 ? 'just now' : `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
 }
 
 interface TaskCardProps {
   task: Task
   onClick: () => void
+  index?: number
 }
 
-export function TaskCard({ task, onClick }: TaskCardProps) {
+export function TaskCard({ task, onClick, index = 0 }: TaskCardProps) {
+  const storeAgents = useAgentStore((s) => s.agents)
   const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: task.id,
-    data: { type: 'task', task },
-  })
+    attributes, listeners, setNodeRef, transform, transition, isDragging,
+  } = useSortable({ id: task.id, data: { type: 'task', task } })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    animationDelay: `${Math.min(index * 0.03, 0.25)}s`,
   }
 
-  const PriorityIcon = priorityConfig[task.priority].icon
+  // Resolve assignee dynamically — check store agents first, fall back to static AGENT_MAP
+  const storeAgent = task.assignedAgentId ? storeAgents.find(a => a.id === task.assignedAgentId) : null
+  const constAgent = task.assignee ? AGENT_MAP[task.assignee] : null
+  const agentName = storeAgent?.name || constAgent?.name || null
+  const agentColor = constAgent?.color || '#71695e'
+  const agentInitial = constAgent?.initial || (agentName ? agentName[0].toUpperCase() : '?')
+
+  const prioColor = PRIORITY_COLORS[task.priority]
+  const prioSymbol = PRIORITY_SYMBOLS[task.priority]
+  const pct = task.progress || 0
+  const sub = task.subtasks || [0, 0]
+  const tags = task.tags?.length ? task.tags : task.labels
+  const isDone = task.status === 'done'
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-pointer',
-        isDragging && 'opacity-50 shadow-md'
+        'group bg-white border border-[#eeebe4] rounded-[10px] p-3 cursor-grab animate-fade-in',
+        'transition-all duration-150',
+        'hover:shadow-[0_3px_12px_rgba(0,0,0,0.07)] hover:-translate-y-px',
+        isDragging && 'opacity-30 rotate-[1.5deg] shadow-lg',
+        isDone && 'opacity-60'
       )}
       onClick={onClick}
+      {...attributes}
+      {...listeners}
     >
-      {/* Drag handle + Priority */}
-      <div className="flex items-center gap-2 mb-2">
-        <button
-          className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing touch-none"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </button>
-        <PriorityIcon className={cn('h-3.5 w-3.5', priorityConfig[task.priority].color)} />
-        <span className={cn('text-[10px] font-medium uppercase tracking-wider', priorityConfig[task.priority].color)}>
-          {task.priority}
+      {/* Priority + Title */}
+      <div className="flex items-start gap-1.5 mb-1">
+        <span className="text-[0.65rem] font-extrabold shrink-0 mt-px leading-none" style={{ color: prioColor }}>
+          {prioSymbol}
         </span>
+        <p className={cn('text-[0.75rem] font-semibold leading-snug flex-1 text-[#1a1a1a]', isDone && 'line-through text-[#a19a8f]')}>
+          {task.title}
+        </p>
+        <span className="text-sm text-[#c5c0b8] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">›</span>
       </div>
 
-      {/* Title */}
-      <h4 className="text-sm font-medium leading-snug mb-2 line-clamp-2">
-        {task.title}
-      </h4>
+      {/* Description */}
+      {task.description && (
+        <p className="text-[0.64rem] text-[#71695e] leading-relaxed mb-2 line-clamp-2">{task.description}</p>
+      )}
 
-      {/* Labels */}
-      {task.labels.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          {task.labels.map((label) => (
-            <Badge
-              key={label}
-              variant="secondary"
-              className="text-[10px] px-1.5 py-0 h-5"
-            >
-              {label}
-            </Badge>
+      {/* Progress Bar */}
+      {sub[1] > 0 && (
+        <div className="h-[3px] bg-[#f4f1eb] rounded-full mb-2 overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${pct}%`, background: prioColor }} />
+        </div>
+      )}
+
+      {/* Assignee + Time */}
+      <div className="flex items-center justify-between mb-1">
+        {agentName ? (
+          <div className="flex items-center gap-1.5">
+            <div className="w-[16px] h-[16px] rounded-full flex items-center justify-center text-[7px] font-bold text-white" style={{ background: agentColor }}>
+              {agentInitial}
+            </div>
+            <span className="text-[0.6rem] text-[#71695e] font-medium">{agentName}</span>
+          </div>
+        ) : (
+          <span className="text-[0.58rem] text-[#c5c0b8] italic">unassigned</span>
+        )}
+        <span className="text-[0.52rem] text-[#a19a8f] tabular-nums">{relativeTime(task.createdAt)}</span>
+      </div>
+
+      {/* Tags */}
+      {tags && tags.length > 0 && (
+        <div className="flex flex-wrap gap-[2px] mb-1">
+          {tags.slice(0, 4).map(tag => (
+            <span key={tag} className="text-[0.5rem] px-[5px] py-px bg-[#f0ece5] border border-[#eeebe4] rounded-[3px] text-[#6b6560] font-medium">
+              {tag}
+            </span>
           ))}
+          {tags.length > 4 && <span className="text-[0.5rem] text-[#a19a8f] font-medium">+{tags.length - 4}</span>}
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          {task.dueDate && (
-            <span className={cn(
-              'flex items-center gap-1',
-              task.dueDate < Date.now() && 'text-red-400'
-            )}>
-              <Calendar className="h-3 w-3" />
-              {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      {(sub[1] > 0 || task.comments > 0 || task.commits > 0) && (
+        <div className="flex items-center gap-2 mt-1 pt-1 border-t border-[#f0ece5]">
+          {sub[1] > 0 && (
+            <span className="text-[0.5rem] text-[#a19a8f] font-medium tabular-nums">
+              <strong className="text-[#71695e]">{sub[0]}/{sub[1]}</strong> sub
+            </span>
+          )}
+          {task.comments > 0 && (
+            <span className="text-[0.5rem] text-[#a19a8f] font-medium tabular-nums">
+              <strong className="text-[#71695e]">{task.comments}</strong> msg
+            </span>
+          )}
+          {task.commits > 0 && (
+            <span className="text-[0.5rem] text-[#a19a8f] font-medium tabular-nums">
+              <strong className="text-[#71695e]">{task.commits}</strong> commits
             </span>
           )}
         </div>
-        {task.assignedAgentId && (
-          <span className="flex items-center gap-1 text-primary/70">
-            <Bot className="h-3 w-3" />
-            Agent
-          </span>
-        )}
-      </div>
+      )}
     </div>
   )
 }
 
 export function TaskCardOverlay({ task }: { task: Task }) {
-  const PriorityIcon = priorityConfig[task.priority].icon
+  const prioColor = PRIORITY_COLORS[task.priority]
+  const prioSymbol = PRIORITY_SYMBOLS[task.priority]
 
   return (
-    <div className="w-64 rounded-lg border border-primary/30 bg-card p-3 shadow-md">
-      <div className="flex items-center gap-2 mb-2">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-        <PriorityIcon className={cn('h-3.5 w-3.5', priorityConfig[task.priority].color)} />
-        <span className={cn('text-[10px] font-medium uppercase tracking-wider', priorityConfig[task.priority].color)}>
-          {task.priority}
-        </span>
+    <div className="w-60 bg-white border border-[#d4870b]/30 rounded-[10px] p-3 shadow-[0_12px_40px_rgba(0,0,0,0.15)] rotate-[2deg]">
+      <div className="flex items-start gap-1.5">
+        <span className="text-[0.65rem] font-extrabold shrink-0 mt-px" style={{ color: prioColor }}>{prioSymbol}</span>
+        <p className="text-[0.75rem] font-semibold leading-snug text-[#1a1a1a] line-clamp-2">{task.title}</p>
       </div>
-      <h4 className="text-sm font-medium leading-snug line-clamp-2">{task.title}</h4>
     </div>
   )
 }

@@ -130,10 +130,10 @@ export function JobsPage() {
                     )}>
                       {job.status}
                     </span>
-                    <span className={cn(
-                      "font-mono text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full capitalize border",
-                      PRIORITY_COLORS[job.priority]
-                    )}>
+                    <span
+                      className="font-mono text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full capitalize border"
+                      style={{ color: PRIORITY_COLORS[job.priority], borderColor: PRIORITY_COLORS[job.priority] + '40' }}
+                    >
                       {job.priority}
                     </span>
                   </div>

@@ -161,7 +161,7 @@ export function MissionReview({ plan }: MissionReviewProps) {
                       <Badge variant="secondary" className={cn('text-[10px]', STATUS_COLORS[task.status])}>
                         {STATUS_LABELS[task.status]}
                       </Badge>
-                      <Badge variant="outline" className={cn('text-[10px] capitalize', PRIORITY_COLORS[task.priority])}>
+                      <Badge variant="outline" className="text-[10px] capitalize" style={{ color: PRIORITY_COLORS[task.priority] }}>
                         {task.priority}
                       </Badge>
                       {task.labels.map((l) => (

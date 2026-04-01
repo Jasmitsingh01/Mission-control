@@ -1,4 +1,4 @@
-import { chatCompletion } from '@/lib/openrouter'
+import { chatCompletion, chatCompletionStream } from '@/lib/openrouter'
 import type { TaskStatus, Priority } from '@/lib/constants'
 import type { Provider } from '@/stores/agentStore'
 
@@ -88,19 +88,7 @@ function extractJSON(text: string): string {
   return text.trim()
 }
 
-export async function generateMissionPlan(
-  description: string,
-  missionName: string,
-): Promise<MissionPlan> {
-  const userMessage = `Project Name: "${missionName}"
-
-Project Description:
-${description}
-
-Generate a complete mission plan with the optimal AI agent team and task breakdown.`
-
-  const rawResponse = await chatCompletion(SYSTEM_PROMPT, userMessage)
-
+function parseMissionPlan(rawResponse: string, missionName: string): MissionPlan {
   const jsonStr = extractJSON(rawResponse)
 
   let parsed: {
@@ -125,7 +113,7 @@ Generate a complete mission plan with the optimal AI agent team and task breakdo
   }
 
   const validProviders = ['openai', 'anthropic', 'google', 'local', 'custom']
-  const validStatuses = ['planning', 'inbox', 'assigned', 'in_progress', 'testing', 'review', 'done']
+  const validStatuses = ['backlog', 'todo', 'inprogress', 'review', 'done']
   const validPriorities = ['critical', 'high', 'medium', 'low']
 
   // Sanitize agents
@@ -148,7 +136,7 @@ Generate a complete mission plan with the optimal AI agent team and task breakdo
     title: t.title || `Task ${i + 1}`,
     description: t.description || '',
     priority: (validPriorities.includes(t.priority) ? t.priority : 'medium') as Priority,
-    status: (validStatuses.includes(t.status) ? t.status : 'inbox') as TaskStatus,
+    status: (validStatuses.includes(t.status) ? t.status : 'backlog') as TaskStatus,
     labels: Array.isArray(t.labels) ? t.labels : [],
     assignedAgentRole: agentRoles.has(t.assignedAgentRole) ? t.assignedAgentRole : agents[0].role,
     order: typeof t.order === 'number' ? t.order : i,
@@ -163,4 +151,43 @@ Generate a complete mission plan with the optimal AI agent team and task breakdo
       ? parsed.estimatedPhases
       : ['Planning', 'Implementation', 'Testing', 'Deployment'],
   }
+}
+
+/**
+ * Generate a mission plan using streaming for real-time progress.
+ * Falls back to non-streaming if streaming fails.
+ */
+export async function generateMissionPlan(
+  description: string,
+  missionName: string,
+  onProgress?: (text: string) => void,
+): Promise<MissionPlan> {
+  const userMessage = `Project Name: "${missionName}"
+
+Project Description:
+${description}
+
+Generate a complete mission plan with the optimal AI agent team and task breakdown.`
+
+  let rawResponse: string
+
+  // Try streaming first for better UX
+  if (onProgress) {
+    try {
+      rawResponse = await chatCompletionStream(
+        SYSTEM_PROMPT,
+        userMessage,
+        (_chunk, accumulated) => {
+          onProgress(accumulated)
+        },
+      )
+      return parseMissionPlan(rawResponse, missionName)
+    } catch {
+      // Fall back to non-streaming
+    }
+  }
+
+  // Non-streaming fallback
+  rawResponse = await chatCompletion(SYSTEM_PROMPT, userMessage)
+  return parseMissionPlan(rawResponse, missionName)
 }

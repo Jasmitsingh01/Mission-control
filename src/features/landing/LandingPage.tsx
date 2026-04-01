@@ -65,18 +65,30 @@ export function LandingPage() {
     <div className="overflow-hidden">
       {/* Hero */}
       <section className="relative pt-24 px-8">
-        <div className="relative max-w-7xl mx-auto py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Background effects */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-32 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
+          <div className="absolute top-64 right-1/4 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px]" />
+          <div className="absolute inset-0 bg-dots opacity-60" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto py-20 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
           {/* Left */}
-          <div className="lg:col-span-7">
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-on-surface leading-[1.1]">
+          <div className="lg:col-span-7 animate-fade-in">
+            <div className="inline-flex items-center gap-2 bg-primary/8 border border-primary/15 rounded-full px-4 py-1.5 mb-8">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse-subtle" />
+              <span className="text-xs font-semibold text-primary tracking-wide">Now in Public Beta</span>
+            </div>
+
+            <h1 className="text-5xl md:text-[3.5rem] lg:text-6xl font-bold tracking-tight text-on-surface leading-[1.08] font-[family-name:var(--font-headline)]">
               Build AI Agent Teams.
               <br />
-              <span className="text-primary">Describe Your Goal.</span>
+              <span className="text-gradient-primary">Describe Your Goal.</span>
               <br />
               Watch It Execute.
             </h1>
 
-            <p className="mt-6 text-lg text-on-surface-variant max-w-xl leading-relaxed">
+            <p className="mt-7 text-lg text-on-surface-variant/80 max-w-xl leading-relaxed">
               AgentForge is the AI orchestration platform that turns natural language goals into
               coordinated agent teams. Describe what you want, and watch autonomous agents plan,
               execute, and deliver.
@@ -84,22 +96,22 @@ export function LandingPage() {
 
             <div className="mt-10 flex flex-col sm:flex-row items-start gap-4">
               <Link to="/signup">
-                <button className="bg-primary text-on-primary px-8 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors">
+                <button className="synthetic-gradient text-white px-8 py-3.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 hover:shadow-xl hover:shadow-primary/25 transition-all active:scale-[0.98]">
                   Start for Free
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
-              <button className="border border-outline-variant text-on-surface-variant px-8 py-3 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-surface-container transition-colors">
+              <button className="border border-outline-variant/25 text-on-surface-variant px-8 py-3.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-surface-container hover:border-outline-variant/40 transition-all">
                 <Play className="h-4 w-4" />
                 Watch Demo
               </button>
             </div>
 
             <div className="mt-10 flex items-center gap-6">
-              <span className="text-xs font-mono text-outline uppercase tracking-wider">Powered by</span>
+              <span className="text-[10px] font-mono text-outline/50 uppercase tracking-[0.2em]">Powered by</span>
               <div className="flex items-center gap-5">
                 {['OpenClaw', 'GPT-4o', 'Claude Sonnet'].map((name) => (
-                  <span key={name} className="text-sm text-on-surface-variant font-medium font-mono opacity-60">
+                  <span key={name} className="text-sm text-on-surface-variant/50 font-medium font-mono">
                     {name}
                   </span>
                 ))}
@@ -108,23 +120,23 @@ export function LandingPage() {
           </div>
 
           {/* Right - Kanban Visual */}
-          <div className="lg:col-span-5">
-            <div className="bg-card rounded-xl border border-outline-variant/40 p-4 shadow-sm">
+          <div className="lg:col-span-5 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+            <div className="bg-surface rounded-2xl border border-outline-variant/20 p-5 card-elevated">
               <div className="flex gap-3">
                 {/* TODO Column */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-2 w-2 rounded-full bg-tertiary" />
-                    <span className="text-xs font-mono text-on-surface-variant uppercase tracking-wider">TODO</span>
-                    <span className="text-xs font-mono text-outline ml-auto">3</span>
+                    <span className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-[0.15em] font-semibold">TODO</span>
+                    <span className="text-[10px] font-mono text-outline/40 ml-auto">3</span>
                   </div>
                   <div className="space-y-2">
                     {['Research competitors', 'Draft content plan', 'Setup analytics'].map((task) => (
-                      <div key={task} className="bg-surface-container-low rounded-lg p-3 border border-outline-variant/20">
+                      <div key={task} className="bg-surface-container-low rounded-xl p-3 border border-outline-variant/10 hover:border-outline-variant/25 transition-colors">
                         <p className="text-xs text-on-surface font-medium">{task}</p>
                         <div className="flex items-center gap-1 mt-2">
-                          <Bot className="h-3 w-3 text-primary" />
-                          <span className="text-[10px] text-outline font-mono">agent-01</span>
+                          <Bot className="h-3 w-3 text-primary/60" />
+                          <span className="text-[10px] text-outline/40 font-mono">agent-01</span>
                         </div>
                       </div>
                     ))}
@@ -134,17 +146,17 @@ export function LandingPage() {
                 {/* EXECUTING Column */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="h-2 w-2 rounded-full bg-secondary" />
-                    <span className="text-xs font-mono text-on-surface-variant uppercase tracking-wider">EXECUTING</span>
-                    <span className="text-xs font-mono text-outline ml-auto">2</span>
+                    <div className="h-2 w-2 rounded-full bg-secondary animate-pulse-subtle" />
+                    <span className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-[0.15em] font-semibold">EXECUTING</span>
+                    <span className="text-[10px] font-mono text-outline/40 ml-auto">2</span>
                   </div>
                   <div className="space-y-2">
                     {['Write blog post', 'Generate images'].map((task) => (
-                      <div key={task} className="bg-surface-container-low rounded-lg p-3 border border-secondary/20">
+                      <div key={task} className="bg-surface-container-low rounded-xl p-3 border border-secondary/15 hover:border-secondary/30 transition-colors">
                         <p className="text-xs text-on-surface font-medium">{task}</p>
                         <div className="flex items-center gap-1 mt-2">
                           <Cpu className="h-3 w-3 text-secondary" />
-                          <span className="text-[10px] text-secondary font-mono">running...</span>
+                          <span className="text-[10px] text-secondary font-mono font-medium">running...</span>
                         </div>
                       </div>
                     ))}
@@ -154,17 +166,17 @@ export function LandingPage() {
                 {/* DONE Column */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span className="text-xs font-mono text-on-surface-variant uppercase tracking-wider">DONE</span>
-                    <span className="text-xs font-mono text-outline ml-auto">4</span>
+                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-[0.15em] font-semibold">DONE</span>
+                    <span className="text-[10px] font-mono text-outline/40 ml-auto">4</span>
                   </div>
                   <div className="space-y-2">
                     {['Define audience', 'Keyword research', 'Brand guidelines'].map((task) => (
-                      <div key={task} className="bg-surface-container-low rounded-lg p-3 border border-outline-variant/20 opacity-70">
+                      <div key={task} className="bg-surface-container-low rounded-xl p-3 border border-outline-variant/10 opacity-60">
                         <p className="text-xs text-on-surface font-medium line-through">{task}</p>
                         <div className="flex items-center gap-1 mt-2">
-                          <CheckCircle2 className="h-3 w-3 text-green-500" />
-                          <span className="text-[10px] text-green-500 font-mono">complete</span>
+                          <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                          <span className="text-[10px] text-emerald-500 font-mono font-medium">complete</span>
                         </div>
                       </div>
                     ))}
@@ -177,13 +189,13 @@ export function LandingPage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="bg-surface-container-lowest py-12 border-y border-outline-variant/20">
+      <section className="bg-surface py-14 border-y border-outline-variant/12">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-3xl lg:text-4xl font-bold text-on-surface font-mono">{stat.value}</p>
-                <p className="mt-2 text-sm text-on-surface-variant">{stat.label}</p>
+                <p className="text-3xl lg:text-4xl font-bold text-on-surface font-mono tracking-tight">{stat.value}</p>
+                <p className="mt-2 text-sm text-on-surface-variant/60">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -191,26 +203,26 @@ export function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-24 bg-surface-dim">
+      <section className="py-28 bg-surface-dim bg-grid">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 block">How It Works</span>
-            <h2 className="text-3xl font-bold tracking-tight text-on-surface">From idea to execution in 3 steps</h2>
+            <span className="inline-flex items-center gap-2 bg-secondary/8 border border-secondary/12 rounded-full px-4 py-1.5 text-xs font-semibold text-secondary tracking-wide mb-6">How It Works</span>
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface font-[family-name:var(--font-headline)]">From idea to execution in 3 steps</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { step: '01', title: 'Describe Your Goal', desc: 'Tell AgentForge what you want to achieve in plain language. Be as detailed or high-level as you like.', icon: Target },
               { step: '02', title: 'AI Builds Your Team', desc: 'Our AI analyzes your goal and assembles the perfect team of specialized agents with tasks and dependencies.', icon: Bot },
               { step: '03', title: 'Agents Execute', desc: 'Watch your agent team work in real-time. Monitor progress, review outputs, and intervene when needed.', icon: Zap },
             ].map((item) => (
-              <div key={item.step} className="relative text-center">
-                <div className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-surface-container border border-outline-variant/30 mb-6">
+              <div key={item.step} className="relative text-center bg-surface rounded-2xl border border-outline-variant/12 p-8 card-elevated hover:border-primary/15 transition-all group">
+                <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/8 border border-primary/10 mb-6 group-hover:bg-primary/12 transition-colors">
                   <item.icon className="h-6 w-6 text-primary" />
                 </div>
-                <p className="text-xs font-semibold text-secondary mb-2 font-mono tracking-wider">STEP {item.step}</p>
-                <h3 className="text-lg font-semibold mb-3 text-on-surface">{item.title}</h3>
-                <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+                <p className="text-[10px] font-bold text-primary/70 mb-2 font-mono tracking-[0.2em]">STEP {item.step}</p>
+                <h3 className="text-lg font-bold mb-3 text-on-surface font-[family-name:var(--font-headline)]">{item.title}</h3>
+                <p className="text-sm text-on-surface-variant/70 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -218,12 +230,12 @@ export function LandingPage() {
       </section>
 
       {/* Features Bento Grid */}
-      <section className="py-24 bg-surface-container-lowest">
+      <section className="py-28 bg-surface">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 block">Features</span>
-            <h2 className="text-3xl font-bold tracking-tight text-on-surface">Everything you need to orchestrate AI</h2>
-            <p className="mt-4 text-base text-on-surface-variant max-w-2xl mx-auto">
+            <span className="inline-flex items-center gap-2 bg-primary/8 border border-primary/12 rounded-full px-4 py-1.5 text-xs font-semibold text-primary tracking-wide mb-6">Features</span>
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface font-[family-name:var(--font-headline)]">Everything you need to orchestrate AI</h2>
+            <p className="mt-4 text-base text-on-surface-variant/70 max-w-2xl mx-auto">
               A complete toolkit for managing AI agent teams, from task planning to deployment.
             </p>
           </div>
@@ -231,12 +243,12 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.map((feature) => (
               <div key={feature.title} className={feature.span}>
-                <div className="h-full bg-card rounded-xl border border-outline-variant/30 p-6 hover:border-primary/20 transition-colors">
-                  <div className="inline-flex rounded-lg bg-surface-container p-2.5 mb-4">
+                <div className="h-full bg-surface-container-lowest rounded-2xl border border-outline-variant/12 p-7 hover:border-primary/15 transition-all group card-elevated">
+                  <div className="inline-flex rounded-xl bg-primary/8 border border-primary/8 p-2.5 mb-5 group-hover:bg-primary/12 transition-colors">
                     <feature.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-base mb-2 text-on-surface">{feature.title}</h3>
-                  <p className="text-sm text-on-surface-variant leading-relaxed">{feature.desc}</p>
+                  <h3 className="font-bold text-[15px] mb-2.5 text-on-surface font-[family-name:var(--font-headline)]">{feature.title}</h3>
+                  <p className="text-sm text-on-surface-variant/70 leading-relaxed">{feature.desc}</p>
                 </div>
               </div>
             ))}
@@ -245,23 +257,23 @@ export function LandingPage() {
       </section>
 
       {/* Use Cases */}
-      <section className="py-24 bg-surface-dim">
+      <section className="py-28 bg-surface-dim bg-dots">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 block">Use Cases</span>
-            <h2 className="text-3xl font-bold tracking-tight text-on-surface">Built for every workflow</h2>
+            <span className="inline-flex items-center gap-2 bg-tertiary/8 border border-tertiary/12 rounded-full px-4 py-1.5 text-xs font-semibold text-tertiary tracking-wide mb-6">Use Cases</span>
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface font-[family-name:var(--font-headline)]">Built for every workflow</h2>
           </div>
 
           {/* Tab buttons */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
+          <div className="flex flex-wrap justify-center gap-2 mb-12">
             {useCaseTabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   activeTab === tab
-                    ? 'bg-primary text-on-primary'
-                    : 'bg-surface-container text-on-surface-variant border border-outline-variant/30 hover:bg-surface-container-high'
+                    ? 'synthetic-gradient text-white shadow-md shadow-primary/20'
+                    : 'bg-surface text-on-surface-variant border border-outline-variant/15 hover:border-outline-variant/30 hover:bg-surface-container'
                 }`}
               >
                 {tab}
@@ -270,24 +282,28 @@ export function LandingPage() {
           </div>
 
           {/* Use case detail */}
-          <div className="bg-card rounded-xl border border-outline-variant/30 p-8 md:p-12 max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="bg-surface rounded-2xl border border-outline-variant/12 p-8 md:p-12 max-w-4xl mx-auto card-elevated">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div>
-                <h3 className="text-xl font-semibold text-on-surface mb-3">{currentUseCase.title}</h3>
-                <p className="text-on-surface-variant leading-relaxed mb-6">{currentUseCase.desc}</p>
-                <ul className="space-y-3">
+                <h3 className="text-xl font-bold text-on-surface mb-3 font-[family-name:var(--font-headline)]">{currentUseCase.title}</h3>
+                <p className="text-on-surface-variant/70 leading-relaxed mb-7">{currentUseCase.desc}</p>
+                <ul className="space-y-3.5">
                   {currentUseCase.items.map((item) => (
                     <li key={item} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-secondary shrink-0" />
+                      <div className="rounded-full bg-secondary/10 p-0.5">
+                        <CheckCircle2 className="h-4 w-4 text-secondary" />
+                      </div>
                       <span className="text-sm text-on-surface">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-surface-container rounded-xl border border-outline-variant/20 p-6 h-64 flex items-center justify-center">
+              <div className="bg-surface-container rounded-2xl border border-outline-variant/10 p-6 h-64 flex items-center justify-center">
                 <div className="text-center">
-                  <Activity className="h-10 w-10 text-outline/30 mx-auto mb-3" />
-                  <p className="text-sm text-outline font-mono">Interactive demo</p>
+                  <div className="rounded-2xl bg-surface-container-high p-4 inline-block mb-3">
+                    <Activity className="h-8 w-8 text-outline/20" />
+                  </div>
+                  <p className="text-sm text-outline/50 font-mono">Interactive demo</p>
                 </div>
               </div>
             </div>
@@ -296,27 +312,31 @@ export function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-surface-container-lowest">
+      <section className="py-28 bg-surface">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <div className="rounded-xl border border-outline-variant/30 bg-card p-12">
-            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface">
-              Ready to get started?
-            </h2>
-            <p className="mt-4 text-base text-on-surface-variant max-w-xl mx-auto">
-              Start free. No credit card required. Deploy your first agent team in under 2 minutes.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/signup">
-                <button className="bg-primary text-on-primary px-8 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors">
-                  Get Started Free
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </Link>
-              <Link to="/contact">
-                <button className="border border-outline-variant text-on-surface-variant px-8 py-3 rounded-lg text-sm font-medium hover:bg-surface-container transition-colors">
-                  Talk to Sales
-                </button>
-              </Link>
+          <div className="relative rounded-2xl border border-outline-variant/12 bg-surface-container-lowest p-14 card-elevated overflow-hidden">
+            <div className="absolute inset-0 bg-grid opacity-40" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-primary/5 rounded-full blur-[100px]" />
+            <div className="relative">
+              <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface font-[family-name:var(--font-headline)]">
+                Ready to get started?
+              </h2>
+              <p className="mt-4 text-base text-on-surface-variant/70 max-w-xl mx-auto">
+                Start free. No credit card required. Deploy your first agent team in under 2 minutes.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link to="/signup">
+                  <button className="synthetic-gradient text-white px-8 py-3.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 hover:shadow-xl hover:shadow-primary/25 transition-all active:scale-[0.98]">
+                    Get Started Free
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </Link>
+                <Link to="/contact">
+                  <button className="border border-outline-variant/25 text-on-surface-variant px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-surface-container hover:border-outline-variant/40 transition-all">
+                    Talk to Sales
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

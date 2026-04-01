@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import { createServer } from 'http';
 
+// Import existing routes
 import authRoutes from './routes/auth';
 import proxyRoutes from './routes/proxy';
 import missionRoutes from './routes/missions';
@@ -23,6 +24,9 @@ import agentRoutes from './routes/agents';
 import gatewayRoutes from './routes/gateways';
 import workspaceRoutes from './routes/workspaces';
 import telegramRoutes from './routes/telegram';
+
+// Import new todo routes and model
+import todoRoutes from './routes/todo';
 import { initTelegramBot } from './services/telegramBot';
 import { setupWebSocket } from './services/wsHandler';
 import { openClawService } from './services/openclawService';
@@ -30,7 +34,10 @@ import { WebSocketServer } from 'ws';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/agentforge';
+
+// MongoDB URIs
+const MONGODB_URI_MAIN = process.env.MONGODB_URI || 'mongodb://localhost:27017/agentforge';
+const MONGODB_URI_TODO = process.env.MONGODB_URI_TODO || 'mongodb://localhost:27017/todoApp'; // New URI for todo app
 
 // ── Security Headers ──────────────────────────────────────────────────────────
 app.use(helmet());
@@ -89,6 +96,9 @@ app.use('/api/gateways', gatewayRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/telegram', telegramRoutes);
 
+// Add the new todo API routes
+app.use('/api/todos', todoRoutes);
+
 // Initialize Telegram bot (only if token is configured)
 if (process.env.TELEGRAM_BOT_TOKEN) {
   initTelegramBot();
@@ -112,13 +122,19 @@ app.get('/api/health', async (_req, res) => {
 // Create HTTP server (needed for WebSocket upgrade)
 const server = createServer(app);
 
-// Connect to MongoDB and start server
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
+// Connect to MongoDB databases and start server
+async function startServer() {
+  try {
+    // Connect to the main application database
+    await mongoose.connect(MONGODB_URI_MAIN);
+    console.log('Connected to main MongoDB database');
 
-    // Setup WebSocket after DB is ready
+    // Connect to the todo application database (separate connection)
+    const todoConnection = mongoose.createConnection(MONGODB_URI_TODO);
+    todoConnection.on('connected', () => console.log('Connected to todo app MongoDB database'));
+    todoConnection.on('error', (err) => console.error('Todo DB connection error:', err));
+
+    // Setup WebSocket after DBs are ready
     setupWebSocket(server);
 
     // Setup OpenClaw WebSocket bridge
@@ -145,10 +161,12 @@ mongoose
       console.log(`WebSocket available at ws://localhost:${PORT}/ws/execute`);
       console.log(`OpenClaw bridge at ws://localhost:${PORT}/ws/openclaw/:sessionKey`);
     });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
+  } catch (err) {
+    console.error('Database connection or server start error:', err);
     process.exit(1);
-  });
+  }
+}
+
+startServer();
 
 export default app;

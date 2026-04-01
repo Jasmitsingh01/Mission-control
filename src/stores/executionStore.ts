@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { executeApi } from '@/lib/api'
 import { useTaskStore } from './taskStore'
 
@@ -174,7 +175,9 @@ function mapExecution(e: any): Execution {
   }
 }
 
-export const useExecutionStore = create<ExecutionState>((set, get) => ({
+export const useExecutionStore = create<ExecutionState>()(
+  persist(
+    (set, get) => ({
   executions: [],
   activeExecution: null,
   streamOutput: new Map(),
@@ -505,4 +508,14 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
   getArtifacts: (executionId) => {
     return get().artifacts.get(executionId) || []
   },
-}))
+}),
+    {
+      name: 'mc-executions',
+      partialize: (state) => ({
+        executions: state.executions,
+      }),
+      // Maps don't serialize to JSON, so we only persist the executions array
+      // Stream data, artifacts, and interactions are session-only
+    }
+  )
+)
