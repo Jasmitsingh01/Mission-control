@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -16,16 +16,23 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
-  RotateCcw,
-  Square,
   CheckCircle2,
   FileText,
+  FileCode,
   Terminal,
   Copy,
   Check,
+  ExternalLink,
+  File,
+  Image,
+  Link2,
+  ChevronDown,
+  ChevronUp,
+  Download,
 } from 'lucide-react'
 import { useTaskStore } from '@/stores/taskStore'
 import { useExecutionStore } from '@/stores/executionStore'
+import type { ArtifactInfo } from '@/stores/executionStore'
 import { STATUS_LABELS, PRIORITY_LEVELS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/stores/taskStore'
@@ -45,6 +52,42 @@ const priorityColors: Record<Priority, string> = {
   low: 'bg-surface-container-highest text-on-surface-variant border-outline-variant/20',
 }
 
+function getFileIcon(type: string, name: string) {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  if (['ts', 'tsx', 'js', 'jsx', 'py', 'go', 'rs', 'java', 'c', 'cpp', 'rb', 'php', 'swift', 'kt'].includes(ext)) return FileCode
+  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico'].includes(ext)) return Image
+  if (['html', 'css', 'scss', 'json', 'yaml', 'yml', 'toml', 'xml'].includes(ext)) return FileCode
+  if (type === 'code' || type === 'script') return FileCode
+  if (type === 'image') return Image
+  return File
+}
+
+/** Extract URLs from text */
+function extractLinks(text: string): { url: string; label: string }[] {
+  const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/g
+  const matches = text.match(urlRegex) || []
+  const unique = [...new Set(matches)]
+  return unique.map((url) => {
+    try {
+      const u = new URL(url)
+      return { url, label: u.hostname + (u.pathname !== '/' ? u.pathname.slice(0, 40) : '') }
+    } catch {
+      return { url, label: url.slice(0, 50) }
+    }
+  })
+}
+
+/** Extract code blocks from text */
+function extractCodeBlocks(text: string): { language: string; code: string }[] {
+  const blocks: { language: string; code: string }[] = []
+  const regex = /```(\w*)\n([\s\S]*?)```/g
+  let match
+  while ((match = regex.exec(text)) !== null) {
+    blocks.push({ language: match[1] || 'text', code: match[2].trim() })
+  }
+  return blocks
+}
+
 interface TaskDetailPanelProps {
   task: Task | null
   open: boolean
@@ -55,6 +98,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
   const { updateTask, deleteTask } = useTaskStore()
   const executions = useExecutionStore((s) => s.executions)
   const streamOutput = useExecutionStore((s) => s.streamOutput)
+  const getArtifacts = useExecutionStore((s) => s.getArtifacts)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -63,7 +107,9 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
   const [labels, setLabels] = useState<string[]>([])
   const [labelInput, setLabelInput] = useState('')
   const [hasChanges, setHasChanges] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
+  const [expandedCode, setExpandedCode] = useState<number | null>(null)
+  const [showAllFiles, setShowAllFiles] = useState(false)
 
   useEffect(() => {
     if (task) {
@@ -74,24 +120,25 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
       setLabels([...task.labels])
       setHasChanges(false)
       setLabelInput('')
-      setCopied(false)
+      setCopied(null)
+      setExpandedCode(null)
+      setShowAllFiles(false)
     }
   }, [task])
 
-  if (!task) return null
-
-  // Find linked execution
-  const execution = task.executionId
-    ? executions.find((e) => e.id === task.executionId)
-    : null
-  const executionOutput = task.executionId
-    ? streamOutput.get(task.executionId) || ''
-    : ''
-
-  // Determine result to show
-  const taskResult = task.result || execution?.result || ''
-  const isCompleted = task.status === 'done'
+  // Derived data
+  const execution = task?.executionId ? executions.find((e) => e.id === task.executionId) : null
+  const executionOutput = task?.executionId ? streamOutput.get(task.executionId) || '' : ''
+  const artifacts: ArtifactInfo[] = task?.executionId ? getArtifacts(task.executionId) : []
+  const taskResult = task?.result || execution?.result || ''
+  const isCompleted = task?.status === 'done'
   const isFailed = execution?.status === 'failed'
+
+  // Extract links and code blocks from result
+  const links = useMemo(() => extractLinks(taskResult || executionOutput), [taskResult, executionOutput])
+  const codeBlocks = useMemo(() => extractCodeBlocks(taskResult || executionOutput), [taskResult, executionOutput])
+
+  if (!task) return null
 
   const markChanged = () => setHasChanges(true)
 
@@ -119,13 +166,10 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
     markChanged()
   }
 
-  const handleCopyResult = () => {
-    const text = taskResult || executionOutput
-    if (text) {
-      navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(id)
+    setTimeout(() => setCopied(null), 2000)
   }
 
   const createdDate = new Date(task.createdAt).toLocaleDateString('en-US', {
@@ -135,9 +179,11 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
     month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 
+  const hasOutputs = artifacts.length > 0 || links.length > 0 || codeBlocks.length > 0
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-surface-container-low border-l border-outline-variant/20 p-0">
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto bg-surface-container-low border-l border-outline-variant/20 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-outline-variant/10">
           <SheetTitle className="text-left pr-8 text-sm font-semibold text-on-surface-variant">
             Task Details
@@ -166,36 +212,152 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
             />
           </div>
 
-          {/* Task Result / Output */}
+          {/* ===== FILES / ARTIFACTS ===== */}
+          {artifacts.length > 0 && (
+            <div className="rounded-lg border border-outline-variant/20 bg-surface-container overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/10">
+                <div className="flex items-center gap-2">
+                  <File className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold text-on-surface">Files Created ({artifacts.length})</span>
+                </div>
+                {artifacts.length > 3 && (
+                  <button
+                    onClick={() => setShowAllFiles(!showAllFiles)}
+                    className="text-xs text-primary flex items-center gap-1"
+                  >
+                    {showAllFiles ? 'Show less' : `Show all`}
+                    {showAllFiles ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </button>
+                )}
+              </div>
+              <div className="divide-y divide-outline-variant/10">
+                {(showAllFiles ? artifacts : artifacts.slice(0, 3)).map((artifact, i) => {
+                  const Icon = getFileIcon(artifact.type, artifact.name)
+                  return (
+                    <div key={i} className="px-4 py-2.5 flex items-center gap-3 hover:bg-surface-container-high/50 transition-colors">
+                      <Icon className="h-4 w-4 text-on-surface-variant shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-on-surface truncate">{artifact.name}</p>
+                        <p className="text-[10px] text-outline font-mono truncate">{artifact.path}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {artifact.size && (
+                          <span className="text-[10px] text-outline font-mono">
+                            {artifact.size > 1024 ? `${(artifact.size / 1024).toFixed(1)}KB` : `${artifact.size}B`}
+                          </span>
+                        )}
+                        {artifact.content && (
+                          <button
+                            onClick={() => handleCopy(artifact.content!, `art-${i}`)}
+                            className="p-1 rounded hover:bg-surface-container-highest transition-colors"
+                            title="Copy content"
+                          >
+                            {copied === `art-${i}` ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-outline" />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ===== CODE BLOCKS ===== */}
+          {codeBlocks.length > 0 && (
+            <div className="rounded-lg border border-outline-variant/20 bg-surface-container overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-outline-variant/10">
+                <FileCode className="h-4 w-4 text-secondary" />
+                <span className="text-xs font-semibold text-on-surface">Code Output ({codeBlocks.length})</span>
+              </div>
+              <div className="divide-y divide-outline-variant/10">
+                {codeBlocks.map((block, i) => (
+                  <div key={i}>
+                    <button
+                      onClick={() => setExpandedCode(expandedCode === i ? null : i)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-container-high/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-secondary bg-secondary/10 px-2 py-0.5 rounded">
+                          {block.language || 'code'}
+                        </span>
+                        <span className="text-xs text-on-surface-variant">
+                          {block.code.split('\n').length} lines
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleCopy(block.code, `code-${i}`) }}
+                          className="p-1 rounded hover:bg-surface-container-highest transition-colors"
+                        >
+                          {copied === `code-${i}` ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-outline" />}
+                        </button>
+                        {expandedCode === i ? <ChevronUp className="h-3.5 w-3.5 text-outline" /> : <ChevronDown className="h-3.5 w-3.5 text-outline" />}
+                      </div>
+                    </button>
+                    {expandedCode === i && (
+                      <div className="px-4 pb-3">
+                        <pre className="bg-surface-container-lowest rounded-lg p-3 text-xs font-mono text-on-surface overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap break-words">
+                          {block.code}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===== LINKS / URLs ===== */}
+          {links.length > 0 && (
+            <div className="rounded-lg border border-outline-variant/20 bg-surface-container overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-outline-variant/10">
+                <Link2 className="h-4 w-4 text-tertiary" />
+                <span className="text-xs font-semibold text-on-surface">Links & References ({links.length})</span>
+              </div>
+              <div className="divide-y divide-outline-variant/10">
+                {links.slice(0, 10).map((link, i) => (
+                  <a
+                    key={i}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-high/50 transition-colors group"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-outline shrink-0 group-hover:text-primary" />
+                    <span className="text-sm text-on-surface-variant truncate group-hover:text-primary transition-colors">
+                      {link.label}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===== RESULT / OUTPUT ===== */}
           {(isCompleted || isFailed || taskResult || executionOutput) && (
             <div className={cn(
               'rounded-lg border p-4',
-              isFailed
-                ? 'bg-error/5 border-error/20'
-                : isCompleted
-                ? 'bg-green-500/5 border-green-500/20'
+              isFailed ? 'bg-error/5 border-error/20'
+                : isCompleted ? 'bg-green-500/5 border-green-500/20'
                 : 'bg-surface-container border-outline-variant/20'
             )}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  {isFailed ? (
-                    <AlertCircle className="h-4 w-4 text-error" />
-                  ) : isCompleted ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <FileText className="h-4 w-4 text-primary" />
-                  )}
+                  {isFailed ? <AlertCircle className="h-4 w-4 text-error" />
+                    : isCompleted ? <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    : <FileText className="h-4 w-4 text-primary" />}
                   <span className="text-xs font-semibold text-on-surface">
                     {isFailed ? 'Error Output' : 'Task Result'}
                   </span>
                 </div>
                 {(taskResult || executionOutput) && (
                   <button
-                    onClick={handleCopyResult}
+                    onClick={() => handleCopy(taskResult || executionOutput, 'result')}
                     className="text-xs text-on-surface-variant hover:text-on-surface flex items-center gap-1 transition-colors"
                   >
-                    {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied === 'result' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied === 'result' ? 'Copied' : 'Copy'}
                   </button>
                 )}
               </div>
@@ -216,7 +378,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
 
               {/* Execution stats */}
               {execution && (
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-outline-variant/10">
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-outline-variant/10 flex-wrap">
                   {execution.usage.durationMs > 0 && (
                     <span className="text-[10px] text-on-surface-variant font-mono flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -243,8 +405,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
                     'text-[10px] font-mono font-medium uppercase ml-auto',
                     execution.status === 'completed' ? 'text-green-500' :
                     execution.status === 'failed' ? 'text-error' :
-                    execution.status === 'running' ? 'text-secondary' :
-                    'text-outline'
+                    execution.status === 'running' ? 'text-secondary' : 'text-outline'
                   )}>
                     {execution.status}
                   </span>
@@ -278,8 +439,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
                       type="button"
                       className={cn(
                         "flex-1 h-9 rounded-lg text-[10px] font-medium uppercase tracking-wider flex items-center justify-center gap-1 border transition-colors",
-                        priority === p
-                          ? priorityColors[p]
+                        priority === p ? priorityColors[p]
                           : 'border-outline-variant/10 bg-surface-container text-outline hover:text-on-surface-variant hover:border-outline-variant/30'
                       )}
                       onClick={() => { setPriority(p); markChanged() }}
@@ -301,16 +461,10 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
                 placeholder="Add label..."
                 value={labelInput}
                 onChange={(e) => setLabelInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') { e.preventDefault(); addLabel() }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLabel() } }}
                 className="flex-1 bg-surface-container-lowest border-outline-variant/20 text-sm"
               />
-              <button
-                type="button"
-                onClick={addLabel}
-                className="text-xs font-medium px-3 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-colors"
-              >
+              <button type="button" onClick={addLabel} className="text-xs font-medium px-3 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high transition-colors">
                 Add
               </button>
             </div>
@@ -318,14 +472,10 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
               {labels.map((label) => (
                 <span key={label} className="inline-flex items-center gap-1 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">
                   {label}
-                  <button onClick={() => removeLabel(label)} className="hover:text-error transition-colors">
-                    <X className="h-3 w-3" />
-                  </button>
+                  <button onClick={() => removeLabel(label)} className="hover:text-error transition-colors"><X className="h-3 w-3" /></button>
                 </span>
               ))}
-              {labels.length === 0 && (
-                <span className="text-[10px] text-outline">No labels</span>
-              )}
+              {labels.length === 0 && <span className="text-[10px] text-outline">No labels</span>}
             </div>
           </div>
 
@@ -334,25 +484,16 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
             <span className="text-xs font-medium text-on-surface-variant">Metadata</span>
             {task.assignedAgentId && (
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <Bot className="h-3 w-3 text-secondary" />
-                  Assigned Agent
-                </span>
+                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant"><Bot className="h-3 w-3 text-secondary" />Assigned Agent</span>
                 <code className="font-mono text-[10px] text-primary">{task.assignedAgentId}</code>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                <Clock className="h-3 w-3 text-outline" />
-                Created
-              </span>
+              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant"><Clock className="h-3 w-3 text-outline" />Created</span>
               <span className="font-mono text-[10px] text-on-surface-variant">{createdDate}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                <Clock className="h-3 w-3 text-outline" />
-                Updated
-              </span>
+              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant"><Clock className="h-3 w-3 text-outline" />Updated</span>
               <span className="font-mono text-[10px] text-on-surface-variant">{updatedDate}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -367,24 +508,6 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
             )}
           </div>
 
-          {/* Activity Log */}
-          <div className="bg-surface-container-lowest rounded-lg p-4">
-            <span className="text-xs font-medium text-on-surface-variant block mb-2">Activity Log</span>
-            <div className="text-xs text-on-surface-variant space-y-1">
-              <p className="text-outline">Task created {createdDate}</p>
-              {task.assignedAgentId && (
-                <p className="text-secondary">Assigned to agent <span className="text-primary">{task.assignedAgentId}</span></p>
-              )}
-              {isCompleted && (
-                <p className="text-green-500">Task completed</p>
-              )}
-              {isFailed && (
-                <p className="text-error">Execution failed: {execution?.error || 'Unknown error'}</p>
-              )}
-              <p className="text-outline">Last updated {updatedDate}</p>
-            </div>
-          </div>
-
           {/* Action buttons */}
           <div className="flex gap-2">
             <button
@@ -392,8 +515,7 @@ export function TaskDetailPanel({ task, open, onOpenChange }: TaskDetailPanelPro
               disabled={!hasChanges}
               className={cn(
                 "flex-1 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors",
-                hasChanges
-                  ? 'bg-primary text-on-primary hover:bg-primary/90'
+                hasChanges ? 'bg-primary text-on-primary hover:bg-primary/90'
                   : 'bg-surface-container text-outline border border-outline-variant/10 cursor-not-allowed'
               )}
             >
