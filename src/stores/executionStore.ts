@@ -204,12 +204,33 @@ export const useExecutionStore = create<ExecutionState>()(
   },
 
   abortExecution: async (id) => {
-    await executeApi.abort(id)
+    try {
+      await executeApi.abort(id)
+    } catch (err: any) {
+      console.error(`Failed to abort execution ${id} via API:`, err.message)
+      // Still mark as aborted locally so the UI isn't stuck
+    }
+    // Always update local state — even if API call failed,
+    // the user wants this execution stopped from their perspective
     set((state) => ({
       executions: state.executions.map((e) =>
-        e.id === id ? { ...e, status: 'aborted' as const } : e
+        e.id === id ? { ...e, status: 'aborted' as const, completedAt: Date.now() } : e
       ),
     }))
+
+    // Also clean up stream data
+    set((state) => {
+      const newOutput = new Map(state.streamOutput)
+      const newEvents = new Map(state.streamEvents)
+      const newInteractions = new Map(state.pendingInteractions)
+      // Don't delete — just stop tracking as active
+      return {
+        streamOutput: newOutput,
+        streamEvents: newEvents,
+        pendingInteractions: newInteractions,
+        activeExecution: state.activeExecution === id ? null : state.activeExecution,
+      }
+    })
   },
 
   fetchExecutions: async (page = 1) => {

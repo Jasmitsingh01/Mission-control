@@ -58,13 +58,17 @@ export function invalidateMembershipCache(userId: string, orgId: string): void {
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
+    // Support token via query param for SSE/EventSource (which can't set headers)
+    const queryToken = req.query.token as string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const rawToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : queryToken;
+
+    if (!rawToken) {
       res.status(401).json({ error: 'Authentication required. No token provided.' });
       return;
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = rawToken;
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
     req.userId = decoded.id;

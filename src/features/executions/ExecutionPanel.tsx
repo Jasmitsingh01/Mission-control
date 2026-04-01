@@ -13,6 +13,7 @@ import {
   FileText,
   Send,
   Download,
+  XCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useExecutionStore } from '@/stores/executionStore'
@@ -183,13 +184,7 @@ export function ExecutionPanel({ executionId, className }: ExecutionPanelProps) 
             </span>
           )}
           {isRunning && (
-            <button
-              onClick={() => abortExecution(executionId)}
-              className="flex items-center gap-1.5 h-7 px-3 rounded-lg border border-error/30 text-error font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-error/10 transition-colors"
-            >
-              <Square className="h-3 w-3" />
-              Stop
-            </button>
+            <StopButton executionId={executionId} />
           )}
         </div>
       </div>
@@ -524,6 +519,67 @@ function StreamLine({ event, executionId }: { event: StreamEvent; executionId: s
     <div className={cn('flex items-center gap-1.5 my-1', color)}>
       <Icon className="h-3 w-3 shrink-0" />
       <span>{event.content}</span>
+    </div>
+  )
+}
+
+function StopButton({ executionId }: { executionId: string }) {
+  const abortExecution = useExecutionStore((s) => s.abortExecution)
+  const [stopping, setStopping] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleStop = async () => {
+    setStopping(true)
+    setError(null)
+    try {
+      await abortExecution(executionId)
+      setAttempts((a) => a + 1)
+    } catch (err: any) {
+      setError(err.message || 'Failed to stop')
+      setAttempts((a) => a + 1)
+    } finally {
+      setStopping(false)
+    }
+  }
+
+  const handleForceStop = () => {
+    // Force-clear from local state regardless of API
+    useExecutionStore.setState((state) => ({
+      executions: state.executions.map((e) =>
+        e.id === executionId ? { ...e, status: 'aborted' as const, completedAt: Date.now(), error: 'Force stopped by user' } : e
+      ),
+      activeExecution: state.activeExecution === executionId ? null : state.activeExecution,
+    }))
+    setError(null)
+    setAttempts(0)
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {error && (
+        <span className="text-[10px] text-error font-mono max-w-[120px] truncate" title={error}>
+          {error}
+        </span>
+      )}
+      {attempts >= 2 && (
+        <button
+          onClick={handleForceStop}
+          className="flex items-center gap-1.5 h-7 px-3 rounded-lg bg-error text-white font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-error/90 transition-colors"
+          title="Force remove from UI without waiting for server"
+        >
+          <XCircle className="h-3 w-3" />
+          Force Stop
+        </button>
+      )}
+      <button
+        onClick={handleStop}
+        disabled={stopping}
+        className="flex items-center gap-1.5 h-7 px-3 rounded-lg border border-error/30 text-error font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-error/10 transition-colors disabled:opacity-50"
+      >
+        {stopping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Square className="h-3 w-3" />}
+        {attempts > 0 ? 'Retry Stop' : 'Stop'}
+      </button>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import {
   Clock,
   ChevronDown,
   Zap,
+  Square,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useExecutionStore } from '@/stores/executionStore'
@@ -22,6 +23,7 @@ export function ExecutionsPage() {
     fetchExecutions,
     startExecution,
     connectWebSocket,
+    abortExecution,
   } = useExecutionStore()
 
   const [showNewTask, setShowNewTask] = useState(false)
@@ -197,6 +199,16 @@ export function ExecutionsPage() {
                   {exec.usage.durationMs > 0 && ` · ${(exec.usage.durationMs / 1000).toFixed(1)}s`}
                 </p>
               </div>
+              {(exec.status === 'running' || exec.status === 'queued') && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); abortExecution(exec.id) }}
+                  className="flex items-center gap-1 h-6 px-2.5 rounded-md border border-error/30 text-error font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-error/10 transition-colors"
+                  title="Stop this execution"
+                >
+                  <Square className="h-2.5 w-2.5" />
+                  Stop
+                </button>
+              )}
               <span className={cn(
                 'font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded',
                 exec.status === 'completed' && 'bg-green-400/10 text-green-400',

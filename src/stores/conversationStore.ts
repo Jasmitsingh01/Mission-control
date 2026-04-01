@@ -1,13 +1,8 @@
 /**
  * ConversationStore — Unified view of all agent conversations.
  *
- * Aggregates data from:
- *  - executionStore (stream events, artifacts, interactions)
- *  - activityStore (system events)
- *  - agentStore (agent metadata)
- *
- * Each "conversation" is an execution tied to an agent or task.
- * The store provides a flat, time-ordered feed and per-conversation threads.
+ * Aggregates data from executionStore, activityStore, agentStore, taskStore.
+ * Properly parses agent names from execution titles like "[Agent Name] task title".
  */
 
 import { create } from 'zustand'
@@ -19,6 +14,7 @@ import { useTaskStore } from './taskStore'
 // ─── Public types ───
 
 export type MessageRole = 'user' | 'agent' | 'system' | 'tool' | 'error' | 'artifact'
+export type FeedEventKind = 'started' | 'completed' | 'failed' | 'running' | 'tool' | 'text' | 'artifact' | 'status' | 'activity'
 
 export interface ConversationMessage {
   id: string
@@ -38,6 +34,7 @@ export interface Conversation {
   agentName: string
   agentId?: string
   taskTitle: string
+  missionName: string
   status: Execution['status']
   messages: ConversationMessage[]
   artifacts: ArtifactInfo[]
@@ -48,31 +45,42 @@ export interface Conversation {
 export interface UnifiedFeedItem {
   id: string
   type: 'execution_event' | 'activity_event'
+  kind: FeedEventKind
   timestamp: number
-  // Execution event data
   executionId?: string
   agentName?: string
+  missionName?: string
   taskTitle?: string
   role?: MessageRole
   content?: string
   toolName?: string
   streaming?: boolean
-  // Activity event data
+  execStatus?: Execution['status']
   activityEvent?: ActivityEvent
 }
 
 interface ConversationState {
-  /** Rebuild conversations from execution store data */
   getConversations: () => Conversation[]
-  /** Get a single conversation by execution ID */
   getConversation: (executionId: string) => Conversation | null
-  /** Get unified feed: real execution events + activity events, time-ordered */
   getUnifiedFeed: (limit?: number) => UnifiedFeedItem[]
-  /** Get feed filtered by agent */
   getAgentFeed: (agentId: string, limit?: number) => UnifiedFeedItem[]
 }
 
 // ─── Helpers ───
+
+/** Parse "[Agent Name] mission title" → { agentName, missionName } */
+function parseExecTitle(taskTitle: string): { agentName: string; missionName: string } {
+  const match = taskTitle.match(/^\[(.+?)\]\s*(.*)$/)
+  if (match) {
+    return { agentName: match[1].trim(), missionName: match[2].trim() || taskTitle }
+  }
+  // Try "AgentName — task" format
+  const dashMatch = taskTitle.match(/^(.+?)\s*[—–-]\s*(.+)$/)
+  if (dashMatch && dashMatch[1].length < 30) {
+    return { agentName: dashMatch[1].trim(), missionName: dashMatch[2].trim() }
+  }
+  return { agentName: '', missionName: taskTitle }
+}
 
 function streamEventToRole(type: StreamEvent['type']): MessageRole {
   switch (type) {
@@ -84,8 +92,21 @@ function streamEventToRole(type: StreamEvent['type']): MessageRole {
     case 'interaction_response': return 'user'
     case 'artifact': return 'artifact'
     case 'status': return 'system'
-    case 'complete': return 'system'
+    case 'complete': return 'agent'
     default: return 'system'
+  }
+}
+
+function streamEventToKind(type: StreamEvent['type']): FeedEventKind {
+  switch (type) {
+    case 'text': return 'text'
+    case 'tool_use': return 'tool'
+    case 'tool_result': return 'tool'
+    case 'error': return 'failed'
+    case 'complete': return 'completed'
+    case 'status': return 'status'
+    case 'artifact': return 'artifact'
+    default: return 'status'
   }
 }
 
@@ -94,16 +115,10 @@ function streamEventToMessage(ev: StreamEvent, exec: Execution): ConversationMes
   if (ev.type === 'tool_use') content = `Tool call: ${ev.toolName || 'unknown'}`
   if (ev.type === 'tool_result') content = ev.content?.slice(0, 500) || '(empty result)'
   if (ev.type === 'status') content = `Status: ${ev.content}`
-  if (ev.type === 'complete') content = `Completed: ${ev.content?.slice(0, 200) || 'done'}`
+  if (ev.type === 'complete') content = ev.content || 'Completed'
   if (ev.type === 'artifact') {
-    try {
-      const parsed = JSON.parse(ev.content)
-      content = `File created: ${parsed.name || parsed.path || 'unknown'}`
-    } catch {
-      content = `Artifact: ${ev.content?.slice(0, 100)}`
-    }
+    try { const p = JSON.parse(ev.content); content = `File: ${p.name || p.path || 'unknown'}` } catch { content = ev.content?.slice(0, 100) || '' }
   }
-
   return {
     id: `${ev.executionId}-${ev.timestamp}-${Math.random().toString(36).slice(2, 6)}`,
     role: streamEventToRole(ev.type),
@@ -113,13 +128,6 @@ function streamEventToMessage(ev: StreamEvent, exec: Execution): ConversationMes
     executionId: ev.executionId,
     taskTitle: exec.taskTitle,
   }
-}
-
-function activityToRole(type: string): MessageRole {
-  if (type.startsWith('agent_error') || type === 'job_failed') return 'error'
-  if (type.startsWith('agent_')) return 'agent'
-  if (type.startsWith('task_')) return 'system'
-  return 'system'
 }
 
 // ─── Store ───
@@ -134,21 +142,20 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
     return executions.map((exec): Conversation => {
       const events = streamEvents.get(exec.id) || []
       const artifacts = artifactMap.get(exec.id) || []
+      const { agentName: parsedAgent, missionName } = parseExecTitle(exec.taskTitle)
 
-      // Resolve agent name
+      // Resolve agent name: parsed from title > linked task > store agent > fallback
       const linkedTask = tasks.find(t => t.executionId === exec.id)
       const agentId = linkedTask?.assignee || linkedTask?.assignedAgentId || undefined
-      const agent = agentId ? agents.find(a => a.id === agentId) : undefined
-      const agentName = agent?.name || exec.taskTitle.split(' ')[0] || 'Agent'
+      const storeAgent = agentId ? agents.find(a => a.id === agentId) : undefined
+      const agentName = parsedAgent || storeAgent?.name || 'Agent'
 
-      // Build messages from stream events
       const messages: ConversationMessage[] = events.map(ev => ({
         ...streamEventToMessage(ev, exec),
         agentName,
         agentId,
       }))
 
-      // Add prompt as first user message
       if (exec.prompt) {
         messages.unshift({
           id: `${exec.id}-prompt`,
@@ -162,7 +169,6 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
         })
       }
 
-      // Add result as final message if completed
       if (exec.status === 'completed' && exec.result && !events.some(e => e.type === 'complete')) {
         messages.push({
           id: `${exec.id}-result`,
@@ -183,6 +189,7 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
         agentName,
         agentId,
         taskTitle: exec.taskTitle,
+        missionName,
         status: exec.status,
         messages,
         artifacts,
@@ -196,7 +203,7 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
     return get().getConversations().find(c => c.executionId === executionId) || null
   },
 
-  getUnifiedFeed: (limit = 100) => {
+  getUnifiedFeed: (limit = 200) => {
     const { executions, streamEvents } = useExecutionStore.getState()
     const { events: activityEvents } = useActivityStore.getState()
     const agents = useAgentStore.getState().agents
@@ -204,59 +211,82 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
 
     const items: UnifiedFeedItem[] = []
 
-    // Add execution stream events
     for (const exec of executions) {
       const events = streamEvents.get(exec.id) || []
+      const { agentName: parsedAgent, missionName } = parseExecTitle(exec.taskTitle)
       const linkedTask = tasks.find(t => t.executionId === exec.id)
       const agentId = linkedTask?.assignee || linkedTask?.assignedAgentId
-      const agent = agentId ? agents.find(a => a.id === agentId) : undefined
+      const storeAgent = agentId ? agents.find(a => a.id === agentId) : undefined
+      const agentName = parsedAgent || storeAgent?.name || exec.taskTitle
 
-      for (const ev of events) {
-        // Skip raw text deltas — too noisy for the feed
-        if (ev.type === 'text' && events.some(e => e.type === 'complete')) continue
-
-        items.push({
-          id: `exec-${ev.executionId}-${ev.timestamp}`,
-          type: 'execution_event',
-          timestamp: ev.timestamp,
-          executionId: ev.executionId,
-          agentName: agent?.name || exec.taskTitle,
-          taskTitle: exec.taskTitle,
-          role: streamEventToRole(ev.type),
-          content: ev.type === 'tool_use' ? `Tool: ${ev.toolName}` :
-                   ev.type === 'complete' ? `Completed: ${ev.content?.slice(0, 120)}` :
-                   ev.type === 'status' ? `Status: ${ev.content}` :
-                   ev.type === 'error' ? `Error: ${ev.content?.slice(0, 120)}` :
-                   ev.content?.slice(0, 150) || '',
-          toolName: ev.toolName,
-          streaming: false,
-        })
-      }
-
-      // Add execution start/complete as events if no stream events
-      if (events.length === 0) {
+      // If we have live stream events, use them
+      if (events.length > 0) {
+        for (const ev of events) {
+          if (ev.type === 'text' && events.some(e => e.type === 'complete')) continue
+          items.push({
+            id: `exec-${ev.executionId}-${ev.timestamp}`,
+            type: 'execution_event',
+            kind: streamEventToKind(ev.type),
+            timestamp: ev.timestamp,
+            executionId: ev.executionId,
+            agentName,
+            missionName,
+            taskTitle: exec.taskTitle,
+            role: streamEventToRole(ev.type),
+            execStatus: exec.status,
+            content: ev.type === 'tool_use' ? `Tool: ${ev.toolName}`
+              : ev.type === 'complete' ? `${ev.content?.slice(0, 120) || 'done'}`
+              : ev.type === 'status' ? ev.content
+              : ev.type === 'error' ? ev.content?.slice(0, 120)
+              : ev.content?.slice(0, 150) || '',
+            toolName: ev.toolName,
+          })
+        }
+      } else {
+        // No stream events — create synthetic feed items from execution metadata
+        // "Started" event
         items.push({
           id: `exec-start-${exec.id}`,
           type: 'execution_event',
-          timestamp: exec.createdAt,
+          kind: 'started',
+          timestamp: exec.startedAt || exec.createdAt,
           executionId: exec.id,
-          agentName: agent?.name || exec.taskTitle,
+          agentName,
+          missionName,
           taskTitle: exec.taskTitle,
           role: 'system',
+          execStatus: exec.status,
           content: `Execution started: ${exec.taskTitle}`,
         })
-        if (exec.status === 'completed' || exec.status === 'failed') {
+
+        // "Completed" or "Failed" event
+        if (exec.status === 'completed') {
           items.push({
-            id: `exec-end-${exec.id}`,
+            id: `exec-done-${exec.id}`,
             type: 'execution_event',
+            kind: 'completed',
             timestamp: exec.completedAt || Date.now(),
             executionId: exec.id,
-            agentName: agent?.name || exec.taskTitle,
+            agentName,
+            missionName,
             taskTitle: exec.taskTitle,
-            role: exec.status === 'failed' ? 'error' : 'system',
-            content: exec.status === 'completed'
-              ? `Completed: ${exec.result?.slice(0, 120) || 'done'}`
-              : `Failed: ${exec.error?.slice(0, 120) || 'unknown error'}`,
+            role: 'agent',
+            execStatus: 'completed',
+            content: exec.result?.slice(0, 140) || 'Completed successfully',
+          })
+        } else if (exec.status === 'failed') {
+          items.push({
+            id: `exec-fail-${exec.id}`,
+            type: 'execution_event',
+            kind: 'failed',
+            timestamp: exec.completedAt || Date.now(),
+            executionId: exec.id,
+            agentName,
+            missionName,
+            taskTitle: exec.taskTitle,
+            role: 'error',
+            execStatus: 'failed',
+            content: exec.error?.slice(0, 140) || 'Failed',
           })
         }
       }
@@ -267,28 +297,26 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
       items.push({
         id: `activity-${ev.id}`,
         type: 'activity_event',
+        kind: 'activity',
         timestamp: ev.timestamp,
-        role: activityToRole(ev.type),
+        role: ev.severity === 'error' ? 'error' : ev.type.startsWith('agent_') ? 'agent' : 'system',
         content: ev.message,
         agentName: ev.actorId || undefined,
         activityEvent: ev,
       })
     }
 
-    // Sort newest first, limit
     items.sort((a, b) => b.timestamp - a.timestamp)
     return items.slice(0, limit)
   },
 
   getAgentFeed: (agentId, limit = 50) => {
     return get().getUnifiedFeed(500).filter(item => {
-      if (item.activityEvent?.actorId === agentId) return true
-      if (item.activityEvent?.relatedAgentId === agentId) return true
-      // Check if the execution is linked to this agent
+      if (item.activityEvent?.actorId === agentId || item.activityEvent?.relatedAgentId === agentId) return true
       if (item.executionId) {
         const tasks = useTaskStore.getState().tasks
-        const linkedTask = tasks.find(t => t.executionId === item.executionId)
-        if (linkedTask?.assignee === agentId || linkedTask?.assignedAgentId === agentId) return true
+        const t = tasks.find(t => t.executionId === item.executionId)
+        if (t?.assignee === agentId || t?.assignedAgentId === agentId) return true
       }
       return false
     }).slice(0, limit)
